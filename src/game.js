@@ -8,7 +8,7 @@ var GameState = {
   Generating: "Generating maze...",
   Playing: "Maze is ready - Find the route now",
   Solving: "Finding the path...",
-  Finished: "Finished - Generate maze to play again",
+  Finished: "Route complete",
 };
 
 function Game() {
@@ -19,6 +19,7 @@ function Game() {
   this.statusElement = null;
   this.pathButton = null;
   this.generateButton = null;
+  this.randomButton = null;
   this.autoPath = false;
   this.playPart = null;
 
@@ -69,6 +70,12 @@ Game.prototype = {
 
   setState: function (state) {
     this.state = state;
+    //drop any held arrow keys so they cannot resume movement in the next round
+    this.arrowKeyStatus = 0;
+    if (this.keyboardTimer != null) {
+      clearTimeout(this.keyboardTimer);
+      this.keyboardTimer = null;
+    }
     this.updateToolbar();
   },
 
@@ -90,9 +97,23 @@ Game.prototype = {
     }
     setEnabled(
       this.generateButton,
-      s == GameState.Setup || s == GameState.Finished,
+      s == GameState.Setup ||
+        s == GameState.Playing ||
+        s == GameState.Finished,
+    );
+    setEnabled(
+      this.randomButton,
+      s == GameState.Playing || s == GameState.Finished,
     );
     setEnabled(this.pathButton, s == GameState.Playing);
+  },
+
+  /* pick a new entrance and exit; the player goes back to the entrance */
+  randomizeEntranceAndExit: function () {
+    this.autoPath = false;
+    this.path.randomEntranceAndExit();
+    this.updateCounters();
+    this.setState(GameState.Playing);
   },
 
   updateCounters: function () {
@@ -228,12 +249,22 @@ Game.prototype = {
     this.newToolElement(line, "]", false, null);
 
     //generate
+    line = this.newToolElement(tools, "|", false, null);
     this.generateButton = this.newToolElement(
-      this.newToolElement(tools, "|", false, null),
+      line,
       "Generate Maze",
       false,
       function (e, obj) {
         that.resetMaze();
+      },
+    );
+    this.newToolElement(line, " | ", false, null);
+    this.randomButton = this.newToolElement(
+      line,
+      "Random Entrance & Exit",
+      false,
+      function (e, obj) {
+        that.randomizeEntranceAndExit();
       },
     );
 
