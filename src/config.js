@@ -26,8 +26,8 @@ var Config = {
 		height : 500 //only used when canvasSize == fixed
 	},
 	Maze : {
-		rows : 32,
-		cols : 32,
+		rows : 16,
+		cols : 16,
 		wallColor : "RGB(0, 0, 0)",
 		highlightedWallColor : "#ff0000",
 		highlightedCellColor : "RGBA(171,174,180,0.5)",

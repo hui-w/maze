@@ -1,409 +1,539 @@
-/** 
-* @author Wang, Hui (huiwang@qlike.com) 
-* @repo https://github.com/hui-w/maze
-* @licence MIT 
-*/ 
+/**
+ * @author Wang, Hui (huiwang@qlike.com)
+ * @repo https://github.com/hui-w/maze
+ * @licence MIT
+ */
+var GameState = {
+  Setup: "Select a size and generate maze",
+  Generating: "Generating maze...",
+  Playing: "Maze is ready - Find the route now",
+  Solving: "Finding the path...",
+  Finished: "Finished - Generate maze to play again",
+};
+
 function Game() {
-	this.maze = new Maze(Config.Maze.rows, Config.Maze.cols);
-	this.path = new Path();
+  this.maze = new Maze(Config.Maze.rows, Config.Maze.cols);
+  this.path = new Path();
+  this.state = GameState.Setup;
+  this.settingControls = [];
+  this.statusElement = null;
+  this.pathButton = null;
+  this.generateButton = null;
+  this.autoPath = false;
+  this.playPart = null;
 
-	this.width = 0;
-	this.height = 0;
-	this.cellSize = 0;
+  this.width = 0;
+  this.height = 0;
+  this.cellSize = 0;
 
-	this.canvas = null;
-	this.context = null;
+  this.canvas = null;
+  this.context = null;
 
-	//from 0000 to 1111 (Keys: left-up-right-bottom)
-	this.arrowKeyStatus = 0;
-	this.keyboardTimer = null;
+  //from 0000 to 1111 (Keys: left-up-right-bottom)
+  this.arrowKeyStatus = 0;
+  this.keyboardTimer = null;
 
-	//initialize
-	this.init();
+  //initialize
+  this.init();
 }
 
 Game.prototype = {
-	init : function () {
-		var that = this;
-		this.width = document.documentElement.clientWidth;
-		this.height = document.documentElement.clientHeight;
-		this.render();
+  init: function () {
+    var that = this;
+    this.width = document.documentElement.clientWidth;
+    this.height = document.documentElement.clientHeight;
+    this.render();
 
-		//maze and path events
-		function updateUI() {
-			that.redraw();
-		};
-		this.maze.onUpdateUI = updateUI;
-		this.path.onUpdateUI = updateUI;
+    //maze and path events
+    function updateUI() {
+      that.redraw();
+    }
+    this.maze.onUpdateUI = updateUI;
+    this.path.onUpdateUI = updateUI;
 
-		//initialize the maze; when it's done, initialize the path
-		this.maze.onInitComplete = function () {
-			that.path.init(that.maze);
-		};
-		this.maze.init();
+    //initialize the maze; when it's done, initialize the path
+    this.maze.onInitComplete = function () {
+      that.path.init(that.maze);
+      that.updateCounters();
+      that.playPart.style.display = "";
+      that.setState(GameState.Playing);
+    };
+    this.prepareMaze();
 
-		this.path.onPathComplete = function () {
-			$("step-counter-auto").innerHTML = this.getPathLength();
-		};
-	},
+    this.path.onPathComplete = function () {
+      that.autoPath = true;
+      that.updateCounters();
+      that.setState(GameState.Finished);
+    };
+  },
 
-	render : function () {
-		var that = this;
+  setState: function (state) {
+    this.state = state;
+    this.updateToolbar();
+  },
 
-		//create the wrapper
-		var rootElement = document.body;
-		var wrapper = rootElement.createChild("div", {
-				"id" : "game-wrapper",
-				"style" : "padding: " + Config.Game.padding + "px"
-			})
+  updateToolbar: function () {
+    var s = this.state;
+    this.statusElement.innerHTML = s;
+    function setEnabled(element, enabled) {
+      if (enabled) {
+        element.removeClassName("disabled");
+      } else {
+        element.addClassName("disabled");
+      }
+    }
+    for (var i = 0; i < this.settingControls.length; i++) {
+      setEnabled(
+        this.settingControls[i],
+        s == GameState.Setup || s == GameState.Finished,
+      );
+    }
+    setEnabled(
+      this.generateButton,
+      s == GameState.Setup || s == GameState.Finished,
+    );
+    setEnabled(this.pathButton, s == GameState.Playing);
+  },
 
-			//initialize the canvas and the context
-			this.canvas = wrapper.createChild("canvas", {
-				"id" : "game-canvas",
-				"width" : 0,
-				"height" : 0
-			});
-		if (typeof G_vmlCanvasManager != "undefined") {
-			this.canvas = G_vmlCanvasManager.initElement(this.canvas);
-		}
-		this.context = this.canvas.getContext("2d");
+  updateCounters: function () {
+    $("counter-steps").innerHTML = this.path.stepCounter;
+    this.pathLengthElement.innerHTML = this.autoPath
+      ? this.path.getPathLength()
+      : "N/A";
+  },
 
-		//calculate the grid size and canvas size
-		this.resizeCanvas();
+  render: function () {
+    var that = this;
 
-		//check if the window size is changed
-		function checkWindowsize() {
-			var nwidth = document.documentElement.clientWidth;
-			var nheight = document.documentElement.clientHeight;
-			if (nwidth != that.width || nheight != that.height) {
-				that.width = nwidth;
-				that.height = nheight;
-				that.resizeCanvas();
-			}
-		}
-		setInterval(checkWindowsize, 200);
+    //create the wrapper
+    var rootElement = document.body;
+    var wrapper = rootElement.createChild("div", {
+      id: "game-wrapper",
+      style: "padding: " + Config.Game.padding + "px",
+    });
 
-		//render the toolbar
-		this.renderToolbar(rootElement);
+    //initialize the canvas and the context
+    this.canvas = wrapper.createChild("canvas", {
+      id: "game-canvas",
+      width: 0,
+      height: 0,
+    });
+    if (typeof G_vmlCanvasManager != "undefined") {
+      this.canvas = G_vmlCanvasManager.initElement(this.canvas);
+    }
+    this.context = this.canvas.getContext("2d");
 
-		//keyboard events
-		this.handleKeyEvent = function (e) {
-			switch (e.type) {
-			case "keydown":
-				that.keyDown(e);
-				break;
-			case "keyup":
-				that.keyUp(e);
-				break;
-			}
-		}
-		document.addEventListener("keydown", this.handleKeyEvent, false);
-		document.addEventListener("keyup", this.handleKeyEvent, false);
-	},
+    //calculate the grid size and canvas size
+    this.resizeCanvas();
 
-	renderToolbar : function (parent) {
-		var that = this;
+    //check if the window size is changed
+    function checkWindowsize() {
+      var nwidth = document.documentElement.clientWidth;
+      var nheight = document.documentElement.clientHeight;
+      if (nwidth != that.width || nheight != that.height) {
+        that.width = nwidth;
+        that.height = nheight;
+        that.resizeCanvas();
+      }
+    }
+    setInterval(checkWindowsize, 200);
 
-		//tool bar container
-		var tools = parent.createChild("div", {
-				"style" : "padding:" + Config.Game.padding + "px;",
-				"class" : "toolbar"
-			});
-		tools.createChild("img", {
-			"src" : "static/logo.png",
-			"width" : 100,
-			"style" : "margin: 0 0 10px 0"
-		});
-		this.newToolElement(this.newToolElement(tools, "|", false, null), "How to play:", true, null);
+    //render the toolbar
+    this.renderToolbar(rootElement);
 
-		//separator
-		this.newToolElement(tools, "-", false, null);
+    //keyboard events
+    this.handleKeyEvent = function (e) {
+      switch (e.type) {
+        case "keydown":
+          that.keyDown(e);
+          break;
+        case "keyup":
+          that.keyUp(e);
+          break;
+      }
+    };
+    document.addEventListener("keydown", this.handleKeyEvent, false);
+    document.addEventListener("keyup", this.handleKeyEvent, false);
+  },
 
-		//new maze
-		this.newToolElement(this.newToolElement(tools, "|", false, null), "1) Reset Maze", false, function (e, obj) {
-			that.resetMaze();
-		});
-		this.newToolElement(this.newToolElement(tools, "|", false, null), "&nbsp;&nbsp;&nbsp;&nbsp;(Initialize a maze)", false, null);
+  renderToolbar: function (parent) {
+    var that = this;
 
-		//maze step
-		var line = this.newToolElement(tools, "|", false, null);
-		this.newToolElement(line, "&nbsp;&nbsp;&nbsp;&nbsp;Show Step by Step - ", false, null);
-		this.newToolElement(line, Config.Maze.showStep ? "ON" : "OFF", false, function (e, obj) {
-			Config.Maze.showStep = !Config.Maze.showStep;
-			obj.innerHTML = Config.Maze.showStep ? "ON" : "OFF";
-		});
+    //tool bar container
+    var tools = parent.createChild("div", {
+      style: "padding:" + Config.Game.padding + "px;",
+      class: "toolbar",
+    });
+    tools.createChild("img", {
+      src: "static/logo.png",
+      width: 100,
+      style: "margin: 0 0 10px 0",
+    });
+    this.statusElement = this.newToolElement(
+      this.newToolElement(tools, "|", false, null),
+      "",
+      true,
+      null,
+    );
 
-		//maze size
-		var line = this.newToolElement(tools, "|", false, null);
-		this.newToolElement(line, "&nbsp;&nbsp;&nbsp;&nbsp;Maze Size - ", false, null);
-		line.createChild("span", {
-			"id" : "maze-size",
-			"class" : "highlighted"
-		}, "M");
-		this.newToolElement(line, " [", false, null);
-		this.newToolElement(line, "XS", false, function (e, obj) {
-			that.resizeMaze("XS");
-		});
-		this.newToolElement(line, " ", false, null);
-		this.newToolElement(line, "S", false, function (e, obj) {
-			that.resizeMaze("S");
-		});
-		this.newToolElement(line, " ", false, null);
-		this.newToolElement(line, "M", false, function (e, obj) {
-			that.resizeMaze("M");
-		});
-		this.newToolElement(line, " ", false, null);
-		this.newToolElement(line, "L", false, function (e, obj) {
-			that.resizeMaze("L");
-		});
-		this.newToolElement(line, " ", false, null);
-		this.newToolElement(line, "XL", false, function (e, obj) {
-			that.resizeMaze("XL");
-		});
-		this.newToolElement(line, "] ", false, null);
+    //separator
+    this.newToolElement(tools, "-", false, null);
 
-		//change entrance and exit
-		this.newToolElement(this.newToolElement(tools, "|", false, null), "2) Entrance & Exit", false, function (e, obj) {
-			that.resetEntranceAndExit();
-		});
-		line = this.newToolElement(tools, "|");
-		this.newToolElement(this.newToolElement(tools, "|", false, null), "&nbsp;&nbsp;&nbsp;&nbsp;(Get randomized start and end points)", false, null);
+    //step by step (animation applies to both maze generation and path finding)
+    var line = this.newToolElement(tools, "|", false, null);
+    this.newToolElement(line, "Show Animation - ", false, null);
+    this.settingControls.push(
+      this.newToolElement(
+        line,
+        Config.Maze.showStep ? "ON" : "OFF",
+        false,
+        function (e, obj) {
+          Config.Maze.showStep = !Config.Maze.showStep;
+          Config.Path.showStep = Config.Maze.showStep;
+          obj.innerHTML = Config.Maze.showStep ? "ON" : "OFF";
+        },
+      ),
+    );
 
-		//move
-		this.newToolElement(this.newToolElement(tools, "|", false, null), "3) Move", false, null);
-		this.newToolElement(this.newToolElement(tools, "|", false, null), "&nbsp;&nbsp;&nbsp;&nbsp;(Use keyboard arrows to control)", false, null);
+    //maze size
+    line = this.newToolElement(tools, "|", false, null);
+    this.newToolElement(line, "Maze Size - ", false, null);
+    line.createChild(
+      "span",
+      {
+        id: "maze-size",
+        class: "highlighted",
+      },
+      "XS",
+    );
+    this.newToolElement(line, " [", false, null);
+    var sizes = ["XS", "S", "M", "L", "XL"];
+    for (var i = 0; i < sizes.length; i++) {
+      if (i > 0) {
+        this.newToolElement(line, " ", false, null);
+      }
+      this.settingControls.push(
+        this.newToolElement(
+          line,
+          sizes[i],
+          false,
+          (function (size) {
+            return function () {
+              that.resizeMaze(size);
+            };
+          })(sizes[i]),
+        ),
+      );
+    }
+    this.newToolElement(line, "]", false, null);
 
-		//show path
-		this.newToolElement(this.newToolElement(tools, "|", false, null), "4) Show Path", false, function (e, obj) {
-			that.getPath();
-		});
-		this.newToolElement(this.newToolElement(tools, "|", false, null), "&nbsp;&nbsp;&nbsp;&nbsp;(Let the computer find the path for you)", false, null);
+    //generate
+    this.generateButton = this.newToolElement(
+      this.newToolElement(tools, "|", false, null),
+      "Generate Maze",
+      false,
+      function (e, obj) {
+        that.resetMaze();
+      },
+    );
 
-		//path step
-		line = this.newToolElement(tools, "|", false, null);
-		this.newToolElement(line, "&nbsp;&nbsp;&nbsp;&nbsp;Show Step by Step - ", false, null);
-		this.newToolElement(line, Config.Path.showStep ? "ON" : "OFF", false, function (e, obj) {
-			Config.Path.showStep = !Config.Path.showStep;
-			obj.innerHTML = Config.Path.showStep ? "ON" : "OFF";
-			that.redraw();
-		});
+    //move, show path and counter stay hidden until the first maze is generated
+    var part = tools.createChild("div", {
+      style: "display:none",
+    });
+    this.playPart = part;
 
-		//separator
-		this.newToolElement(tools, "-", false, null);
-		line = this.newToolElement(tools, "|", false, null);
-		this.newToolElement(line, "Step Counter: ", false, null);
-		line.createChild("span", {
-			"id" : "step-counter-manual",
-			"class" : "highlighted"
-		}, "0");
-		line = this.newToolElement(tools, "|", false, null);
-		this.newToolElement(line, "Auto Path Length: ", false, null);
-		line.createChild("span", {
-			"id" : "step-counter-auto",
-			"class" : "highlighted"
-		}, "-1");
-		
-		this.newToolElement(tools, "-", false, null);
-		line = this.newToolElement(tools, "|", false, null);
-		this.newToolElement(line, "Copyright (C) QLike.com", false, null);
-	},
+    //separator
+    this.newToolElement(part, "-", false, null);
 
-	newToolElement : function (parent, text, highlight, handler) {
-		var element = null;
-		if (text == "|") {
-			//new line
-			element = parent.createChild("div", {
-					"class" : "toolbar-line"
-				});
-		} else if (text == "-") {
-			//separator line
-			element = parent.createChild("div", {
-					"class" : "toolbar-separator"
-				});
-		} else if (handler == null) {
-			//normal text
-			element = parent.createChild("span", {
-					"class" : "toolbar-text"
-				}, text);
-		} else {
-			//link button
-			element = parent.createChild("span", {
-					"class" : "toolbar-linkbutton"
-				}, text);
-			element.onclick = function (e) {
-				handler(e, this);
-			}
-		}
-		if (highlight) {
-			element.addClassName("highlighted");
-		}
-		return element;
-	},
+    //find the route: by hand or by computer
+    this.newToolElement(
+      this.newToolElement(part, "|", false, null),
+      "Find the route",
+      true,
+      null,
+    );
 
-	resizeMaze : function (size) {
-		switch (size) {
-		case "XS":
-			this.maze.rows = 16;
-			this.maze.cols = 16;
-			break;
-		case "S":
-			this.maze.rows = 24;
-			this.maze.cols = 24;
-			break;
-		case "M":
-			this.maze.rows = 32;
-			this.maze.cols = 32;
-			break;
-		case "L":
-			this.maze.rows = 48;
-			this.maze.cols = 48;
-			break;
-		case "XL":
-			this.maze.rows = 64;
-			this.maze.cols = 64;
-			break;
-		}
+    //by hand
+    this.newToolElement(
+      this.newToolElement(part, "|", false, null),
+      "&nbsp;&nbsp;By hand - use keyboard arrows",
+      false,
+      null,
+    );
+    line = this.newToolElement(part, "|", false, null);
+    this.newToolElement(line, "&nbsp;&nbsp;&nbsp;&nbsp;Steps: ", false, null);
+    line.createChild(
+      "span",
+      {
+        id: "counter-steps",
+        class: "highlighted",
+      },
+      "0",
+    );
 
-		$("maze-size").innerHTML = size;
-		this.resizeCanvas();
-		this.resetMaze();
-	},
+    //by computer
+    line = this.newToolElement(part, "|", false, null);
+    this.newToolElement(line, "&nbsp;&nbsp;By computer - ", false, null);
+    this.pathButton = this.newToolElement(
+      line,
+      "Show Path",
+      false,
+      function (e, obj) {
+        that.getPath();
+      },
+    );
+    line = this.newToolElement(part, "|", false, null);
+    this.newToolElement(
+      line,
+      "&nbsp;&nbsp;&nbsp;&nbsp;Path Length: ",
+      false,
+      null,
+    );
+    this.pathLengthElement = line.createChild(
+      "span",
+      {
+        class: "highlighted",
+      },
+      "N/A",
+    );
 
-	/* keyboard events: key down */
-	keyDown : function (e) {
-		var that = this;
-		var keyCode = event.keyCode;
-		switch (keyCode) {
-		case 37:
-			this.arrowKeyStatus |= 1;
-			break;
-		case 38:
-			this.arrowKeyStatus |= 1 << 1;
-			break;
-		case 39:
-			this.arrowKeyStatus |= 1 << 2;
-			break;
-		case 40:
-			this.arrowKeyStatus |= 1 << 3;
-			break;
-		}
-		if (this.arrowKeyStatus > 0 && this.keyboardTimer == null) {
-			keyboardTimerHandler();
-		}
+    tools.createChild(
+      "div",
+      {
+        class: "toolbar-footer",
+      },
+      "Copyright (C) QLike.com",
+    );
+  },
 
-		function keyboardTimerHandler() {
-			var dRow = 0;
-			var dCol = 0;
-			if ((that.arrowKeyStatus & 1) > 0) {
-				//left
-				dCol--;
-			}
+  newToolElement: function (parent, text, highlight, handler) {
+    var element = null;
+    if (text == "|") {
+      //new line
+      element = parent.createChild("div", {
+        class: "toolbar-line",
+      });
+    } else if (text == "-") {
+      //separator line
+      element = parent.createChild("div", {
+        class: "toolbar-separator",
+      });
+    } else if (handler == null) {
+      //normal text
+      element = parent.createChild(
+        "span",
+        {
+          class: "toolbar-text",
+        },
+        text,
+      );
+    } else {
+      //link button
+      element = parent.createChild(
+        "span",
+        {
+          class: "toolbar-linkbutton",
+        },
+        text,
+      );
+      element.onclick = function (e) {
+        if (this.hasClassName("disabled")) {
+          return;
+        }
+        handler(e, this);
+      };
+    }
+    if (highlight) {
+      element.addClassName("highlighted");
+    }
+    return element;
+  },
 
-			if ((that.arrowKeyStatus & (1 << 1)) > 0) {
-				//up
-				dRow--;
-			}
+  resizeMaze: function (size) {
+    switch (size) {
+      case "XS":
+        this.maze.rows = 16;
+        this.maze.cols = 16;
+        break;
+      case "S":
+        this.maze.rows = 24;
+        this.maze.cols = 24;
+        break;
+      case "M":
+        this.maze.rows = 32;
+        this.maze.cols = 32;
+        break;
+      case "L":
+        this.maze.rows = 48;
+        this.maze.cols = 48;
+        break;
+      case "XL":
+        this.maze.rows = 64;
+        this.maze.cols = 64;
+        break;
+    }
 
-			if ((that.arrowKeyStatus & (1 << 2)) > 0) {
-				//right
-				dCol++;
-			}
+    $("maze-size").innerHTML = size;
+    this.resizeCanvas();
+    this.prepareMaze();
+  },
 
-			if ((that.arrowKeyStatus & (1 << 3)) > 0) {
-				//bottom
-				dRow++;
-			}
+  /* show an empty maze (all walls closed) and wait for Generate Maze */
+  prepareMaze: function () {
+    this.autoPath = false;
+    this.path.init();
+    this.maze.prepare();
+    this.updateCounters();
+    this.setState(GameState.Setup);
+    this.redraw();
+  },
 
-			if (that.arrowKeyStatus > 0) {
-				that.moveStep(dRow, dCol);
+  /* keyboard events: key down */
+  keyDown: function (e) {
+    if (this.state != GameState.Playing) {
+      return;
+    }
+    var that = this;
+    var keyCode = event.keyCode;
+    switch (keyCode) {
+      case 37:
+        this.arrowKeyStatus |= 1;
+        break;
+      case 38:
+        this.arrowKeyStatus |= 1 << 1;
+        break;
+      case 39:
+        this.arrowKeyStatus |= 1 << 2;
+        break;
+      case 40:
+        this.arrowKeyStatus |= 1 << 3;
+        break;
+    }
+    if (this.arrowKeyStatus > 0 && this.keyboardTimer == null) {
+      keyboardTimerHandler();
+    }
 
-				//set-up the timer for next round
-				that.keyboardTimer = setTimeout(keyboardTimerHandler, Config.Game.keyboardTimerDelay);
-			} else {
-				that.keyboardTimer = null;
-			}
+    function keyboardTimerHandler() {
+      var dRow = 0;
+      var dCol = 0;
+      if ((that.arrowKeyStatus & 1) > 0) {
+        //left
+        dCol--;
+      }
 
-		};
-	},
+      if ((that.arrowKeyStatus & (1 << 1)) > 0) {
+        //up
+        dRow--;
+      }
 
-	/* keyboard events: key up */
-	keyUp : function (e) {
-		var keyCode = event.keyCode;
-		switch (keyCode) {
-		case 37:
-			this.arrowKeyStatus &= ~1;
-			break;
-		case 38:
-			this.arrowKeyStatus &= ~(1 << 1);
-			break;
-		case 39:
-			this.arrowKeyStatus &= ~(1 << 2);
-			break;
-		case 40:
-			this.arrowKeyStatus &= ~(1 << 3);
-			break;
-		}
-		if (this.arrowKeyStatus == 0) {
-			if (this.keyboardTimer != null) {
-				clearTimeout(this.keyboardTimer);
-				this.keyboardTimer = null;
-			}
-		}
-	},
+      if ((that.arrowKeyStatus & (1 << 2)) > 0) {
+        //right
+        dCol++;
+      }
 
-	resizeCanvas : function () {
-		var wrapperWidth = this.width - Config.Game.padding * 2;
-		var wrapperHeight = this.height - Config.Game.padding * 2;
-		var rateWidth = wrapperWidth / this.maze.rows;
-		var rateHeight = wrapperHeight / this.maze.cols;
-		if (rateWidth > rateHeight) {
-			this.cellSize = Math.floor(rateHeight);
-		} else {
-			this.cellSize = Math.floor(rateWidth);
-		}
+      if ((that.arrowKeyStatus & (1 << 3)) > 0) {
+        //bottom
+        dRow++;
+      }
 
-		this.canvas.width = this.maze.rows * this.cellSize;
-		this.canvas.height = this.maze.cols * this.cellSize;
+      if (that.arrowKeyStatus > 0) {
+        that.moveStep(dRow, dCol);
 
-		this.redraw();
-	},
+        //set-up the timer for next round
+        that.keyboardTimer = setTimeout(
+          keyboardTimerHandler,
+          Config.Game.keyboardTimerDelay,
+        );
+      } else {
+        that.keyboardTimer = null;
+      }
+    }
+  },
 
-	redraw : function () {
-		//draw the background
-		this.context.save();
-		this.context.fillStyle = Config.Game.backgroundColor;
-		this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-		this.context.restore();
+  /* keyboard events: key up */
+  keyUp: function (e) {
+    var keyCode = event.keyCode;
+    switch (keyCode) {
+      case 37:
+        this.arrowKeyStatus &= ~1;
+        break;
+      case 38:
+        this.arrowKeyStatus &= ~(1 << 1);
+        break;
+      case 39:
+        this.arrowKeyStatus &= ~(1 << 2);
+        break;
+      case 40:
+        this.arrowKeyStatus &= ~(1 << 3);
+        break;
+    }
+    if (this.arrowKeyStatus == 0) {
+      if (this.keyboardTimer != null) {
+        clearTimeout(this.keyboardTimer);
+        this.keyboardTimer = null;
+      }
+    }
+  },
 
-		//draw the maze and path
-		this.maze.redraw(this.context, this.cellSize);
-		this.path.redraw(this.context, this.cellSize);
-	},
+  resizeCanvas: function () {
+    var wrapperWidth = this.width - Config.Game.padding * 2;
+    var wrapperHeight = this.height - Config.Game.padding * 2;
+    var rateWidth = wrapperWidth / this.maze.rows;
+    var rateHeight = wrapperHeight / this.maze.cols;
+    if (rateWidth > rateHeight) {
+      this.cellSize = Math.floor(rateHeight);
+    } else {
+      this.cellSize = Math.floor(rateWidth);
+    }
 
-	resetMaze : function () {
-		this.path.init(); //initialize without maze will clear current path content immediately
-		this.maze.init(); //the path will be initialized when the maze initComplete
-		$("step-counter-manual").innerHTML = this.path.stepCounter;
-		$("step-counter-auto").innerHTML = this.path.getPathLength();
-	},
+    this.canvas.width = this.maze.rows * this.cellSize;
+    this.canvas.height = this.maze.cols * this.cellSize;
 
-	resetEntranceAndExit : function () {
-		this.path.randomEntranceAndExit();
-		$("step-counter-manual").innerHTML = this.path.stepCounter;
-		$("step-counter-auto").innerHTML = this.path.getPathLength();
-	},
+    this.redraw();
+  },
 
-	getPath : function () {
-		this.path.getPath();
-	},
+  redraw: function () {
+    //draw the background
+    this.context.save();
+    this.context.fillStyle = Config.Game.backgroundColor;
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.restore();
 
-	moveStep : function (dRow, dCol) {
-		this.path.moveStep(dRow, dCol);
-		$("step-counter-manual").innerHTML = this.path.stepCounter;
-	}
-}
+    //draw the maze and path
+    this.maze.redraw(this.context, this.cellSize);
+    this.path.redraw(this.context, this.cellSize);
+  },
+
+  resetMaze: function () {
+    this.autoPath = false;
+    this.setState(GameState.Generating);
+    this.path.init(); //initialize without maze will clear current path content immediately
+    this.maze.init(); //the path will be initialized when the maze initComplete
+    this.updateCounters();
+  },
+
+  getPath: function () {
+    if (this.state != GameState.Playing) {
+      return;
+    }
+    this.setState(GameState.Solving);
+    this.path.getPath();
+  },
+
+  moveStep: function (dRow, dCol) {
+    if (this.state != GameState.Playing) {
+      return;
+    }
+    this.path.moveStep(dRow, dCol);
+    this.updateCounters();
+    if (this.path.isAtExit()) {
+      this.setState(GameState.Finished);
+    }
+  },
+};
 
 var game = null;
 addEventListener("load", function () {
-	game = new Game();
+  game = new Game();
 });

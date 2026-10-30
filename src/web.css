@@ -1,39 +1,51 @@
 * {
-	margin: 0px; 
-	padding: 0px;
+  margin: 0px;
+  padding: 0px;
 }
-html, body {
-	overflow: auto;
-    margin:0;
-    padding: 0;
-    font-size:12px;
-    font-family: "Lucida Grande", verdana, arial, helvetica, sans-serif;
+html,
+body {
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  font-family: "Lucida Grande", verdana, arial, helvetica, sans-serif;
 }
-a{
-	color: #00f;
+a {
+  color: #00f;
 }
 #game-wrapper {
-	float: left;
+  float: left;
 }
 .toolbar {
-	float: left;
-	margin: 4px;
-	width: 280px;
+  float: left;
+  margin: 4px;
+  width: 280px;
 }
 .toolbar .toolbar-line {
-	margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 .toolbar .toolbar-separator {
-	border-bottom: 1px solid black;
-	margin: 6px 0px;
+  border-bottom: 1px solid black;
+  margin: 6px 0px;
 }
 .toolbar .toolbar-line .toolbar-text {
-	color: #000;
+  color: #000;
 }
 .toolbar .toolbar-line .toolbar-linkbutton {
-	cursor: pointer;
-	color: #00f;
+  cursor: pointer;
+  color: #00f;
+}
+.toolbar .toolbar-line .toolbar-linkbutton.disabled {
+  cursor: default;
+  color: #999;
 }
 .toolbar .toolbar-line .highlighted {
-	font-weight: bold;
+  font-weight: bold;
+}
+.toolbar .toolbar-footer {
+  border-top: 1px solid black;
+  margin-top: 16px;
+  padding-top: 6px;
+  font-size: 11px;
+  color: #000;
 }
