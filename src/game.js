@@ -20,6 +20,10 @@ function Game() {
   this.pathButton = null;
   this.generateButton = null;
   this.randomButton = null;
+  this.baseDelay = {
+    maze: Config.Maze.stepDelay,
+    path: Config.Path.stepDelay,
+  };
   this.autoPath = false;
   this.playPart = null;
 
@@ -90,9 +94,10 @@ Game.prototype = {
       }
     }
     for (var i = 0; i < this.settingControls.length; i++) {
+      //only locked while an animation is running
       setEnabled(
         this.settingControls[i],
-        s == GameState.Setup || s == GameState.Finished,
+        s != GameState.Generating && s != GameState.Solving,
       );
     }
     setEnabled(
@@ -200,21 +205,37 @@ Game.prototype = {
     //separator
     this.newToolElement(tools, "-", false, null);
 
-    //step by step (animation applies to both maze generation and path finding)
+    //animation speed (applies to both maze generation and path finding)
     var line = this.newToolElement(tools, "|", false, null);
-    this.newToolElement(line, "Show Animation - ", false, null);
-    this.settingControls.push(
-      this.newToolElement(
-        line,
-        Config.Maze.showStep ? "ON" : "OFF",
-        false,
-        function (e, obj) {
-          Config.Maze.showStep = !Config.Maze.showStep;
-          Config.Path.showStep = Config.Maze.showStep;
-          obj.innerHTML = Config.Maze.showStep ? "ON" : "OFF";
-        },
-      ),
+    this.newToolElement(line, "Animation - ", false, null);
+    line.createChild(
+      "span",
+      {
+        id: "animation-speed",
+        class: "highlighted",
+      },
+      "OFF",
     );
+    this.newToolElement(line, " [", false, null);
+    var speeds = ["OFF", "Fast", "Medium", "Slow"];
+    for (var i = 0; i < speeds.length; i++) {
+      if (i > 0) {
+        this.newToolElement(line, " ", false, null);
+      }
+      this.settingControls.push(
+        this.newToolElement(
+          line,
+          speeds[i],
+          false,
+          (function (speed) {
+            return function () {
+              that.setAnimationSpeed(speed);
+            };
+          })(speeds[i]),
+        ),
+      );
+    }
+    this.newToolElement(line, "]", false, null);
 
     //maze size
     line = this.newToolElement(tools, "|", false, null);
@@ -379,6 +400,17 @@ Game.prototype = {
       element.addClassName("highlighted");
     }
     return element;
+  },
+
+  /* Medium keeps the original step delays; Fast and Slow scale them */
+  setAnimationSpeed: function (speed) {
+    var scale = { Slow: 2, Medium: 1, Fast: 0.1 }[speed];
+    Config.Maze.showStep = Config.Path.showStep = scale != null;
+    if (scale != null) {
+      Config.Maze.stepDelay = this.baseDelay.maze * scale;
+      Config.Path.stepDelay = this.baseDelay.path * scale;
+    }
+    $("animation-speed").innerHTML = speed;
   },
 
   resizeMaze: function (size) {
