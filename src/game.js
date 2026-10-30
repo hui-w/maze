@@ -109,6 +109,11 @@ Game.prototype = {
 				"style" : "padding:" + Config.Game.padding + "px;",
 				"class" : "toolbar"
 			});
+		tools.createChild("img", {
+			"src" : "static/logo.png",
+			"width" : 100,
+			"style" : "margin: 0 0 10px 0"
+		});
 		this.newToolElement(this.newToolElement(tools, "|", false, null), "How to play:", true, null);
 
 		//separator

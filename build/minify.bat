@@ -29,6 +29,8 @@ REM Index Files
 copy "%SRC%\index_release.html" "%OUT%\index.html"
 
 REM Copy other files
+md "%OUT%\static"
+copy "%SRC%\static\logo.png" "%OUT%\static\logo.png"
 REM copy "%RES%\favicon.ico" "%OUT%\favicon.ico"
 REM copy "%RES%\apple-touch-icon.png" "%OUT%\apple-touch-icon.png"
 REM copy "%RES%\app.appcache" "%OUT%\app.appcache"
