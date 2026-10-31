@@ -80,11 +80,7 @@ Game.prototype = {
   setState: function (state) {
     this.state = state;
     //drop any held arrow keys so they cannot resume movement in the next round
-    this.arrowKeyStatus = 0;
-    if (this.keyboardTimer != null) {
-      clearTimeout(this.keyboardTimer);
-      this.keyboardTimer = null;
-    }
+    this.stopMoving();
     this.updateToolbar();
   },
 
@@ -163,6 +159,7 @@ Game.prototype = {
       height: 0,
     });
     this.context = this.canvas.getContext("2d");
+    this.bindPointer();
 
     //calculate the grid size and canvas size
     this.resizeCanvas();
@@ -311,7 +308,7 @@ Game.prototype = {
     //by hand
     this.newToolElement(
       this.newToolElement(part, "|", false, null),
-      "&nbsp;&nbsp;Manual - use the arrow keys",
+      "&nbsp;&nbsp;Manual - arrow keys or drag",
       false,
       null,
     );
@@ -516,7 +513,6 @@ Game.prototype = {
     if (this.state != GameState.Playing) {
       return;
     }
-    var that = this;
     var keyCode = e.keyCode;
     switch (keyCode) {
       case 37:
@@ -532,10 +528,15 @@ Game.prototype = {
         this.arrowKeyStatus |= 1 << 3;
         break;
     }
-    if (this.arrowKeyStatus > 0 && this.keyboardTimer == null) {
-      keyboardTimerHandler();
-    }
+    this.startMoving();
+  },
 
+  /* move the player in the held directions, and repeat until all directions are released */
+  startMoving: function () {
+    var that = this;
+    if (this.arrowKeyStatus == 0 || this.keyboardTimer != null) {
+      return;
+    }
     function keyboardTimerHandler() {
       var dRow = 0;
       var dCol = 0;
@@ -570,6 +571,72 @@ Game.prototype = {
       } else {
         that.keyboardTimer = null;
       }
+    }
+    keyboardTimerHandler();
+  },
+
+  /* touch and mouse: hold and drag on the maze, the player moves towards the pointer */
+  bindPointer: function () {
+    var that = this;
+    var canvas = this.canvas;
+    var activePointer = null;
+
+    function update(e) {
+      var node = that.path.stepNode;
+      if (that.state != GameState.Playing || node == null) {
+        that.stopMoving();
+        return;
+      }
+      //canvas pixels, in case the canvas is scaled by CSS
+      var rect = canvas.getBoundingClientRect();
+      var x = ((e.clientX - rect.left) * canvas.width) / rect.width;
+      var y = ((e.clientY - rect.top) * canvas.height) / rect.height;
+      var dx = x - (node.col + 0.5) * that.cellSize;
+      var dy = y - (node.row + 0.5) * that.cellSize;
+
+      //ignore the pointer while it is still on the player's cell
+      var dead = that.cellSize * 0.5;
+      if (Math.abs(dx) < dead && Math.abs(dy) < dead) {
+        that.arrowKeyStatus = 0;
+        return;
+      }
+      if (Math.abs(dx) > Math.abs(dy)) {
+        that.arrowKeyStatus = dx < 0 ? 1 : 1 << 2;
+      } else {
+        that.arrowKeyStatus = dy < 0 ? 1 << 1 : 1 << 3;
+      }
+      that.startMoving();
+    }
+
+    function release(e) {
+      if (activePointer == e.pointerId) {
+        activePointer = null;
+        that.stopMoving();
+      }
+    }
+
+    canvas.addEventListener("pointerdown", function (e) {
+      if (that.state != GameState.Playing || activePointer != null) {
+        return;
+      }
+      activePointer = e.pointerId;
+      canvas.setPointerCapture(e.pointerId);
+      update(e);
+    });
+    canvas.addEventListener("pointermove", function (e) {
+      if (activePointer == e.pointerId) {
+        update(e);
+      }
+    });
+    canvas.addEventListener("pointerup", release);
+    canvas.addEventListener("pointercancel", release);
+  },
+
+  stopMoving: function () {
+    this.arrowKeyStatus = 0;
+    if (this.keyboardTimer != null) {
+      clearTimeout(this.keyboardTimer);
+      this.keyboardTimer = null;
     }
   },
 

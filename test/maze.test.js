@@ -155,3 +155,13 @@ test("moveStep only passes through open walls", function () {
   });
   assert.ok(moved >= 1, "a perfect maze has at least one open neighbour");
 });
+
+test("generation works when the random start cell is the last one", function () {
+  vm.runInContext("var realRandom = Math.random; Math.random = function () { return 0.9999999; };", ctx);
+  try {
+    const maze = generate(4, 8);
+    assert.strictEqual(connectedCellCount(maze), 32);
+  } finally {
+    vm.runInContext("Math.random = realRandom;", ctx);
+  }
+});

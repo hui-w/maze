@@ -101,7 +101,7 @@ Maze.prototype = {
     //start from the any wall
     this.fetchClosingWalls(
       this.tempWalls,
-      this.cells[rand(0, this.cells.length)],
+      this.cells[rand(0, this.cells.length - 1)],
     );
 
     if (!Config.Maze.showStep) {
