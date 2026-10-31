@@ -66,6 +66,14 @@ npm run build
 
 This writes `release/app.min.js`, `release/app.min.css`, `release/index.html` (from `src/index_release.html`) and `release/static/`.
 
+## Test
+
+```
+npm test
+```
+
+Runs the maze generation and A* tests in `test/` with Node's built-in test runner (Node 18 or later, no extra dependencies). They check that generated mazes are perfect (fully connected, no loops) for square and non-square sizes, and that A* returns a valid route.
+
 ## Run locally
 
 ```
