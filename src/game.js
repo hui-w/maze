@@ -476,33 +476,8 @@ Game.prototype = {
   },
 
   resizeMaze: function (size) {
-    switch (size) {
-      case "XXS":
-        this.maze.rows = 8;
-        this.maze.cols = 8;
-        break;
-      case "XS":
-        this.maze.rows = 16;
-        this.maze.cols = 16;
-        break;
-      case "S":
-        this.maze.rows = 24;
-        this.maze.cols = 24;
-        break;
-      case "M":
-        this.maze.rows = 32;
-        this.maze.cols = 32;
-        break;
-      case "L":
-        this.maze.rows = 48;
-        this.maze.cols = 48;
-        break;
-      case "XL":
-        this.maze.rows = 64;
-        this.maze.cols = 64;
-        break;
-    }
-
+    var n = { XXS: 8, XS: 16, S: 24, M: 32, L: 48, XL: 64 }[size];
+    this.maze.resize(n, n);
     this.markSelected(this.sizeButtons, size);
     this.resizeCanvas();
     this.prepareMaze();

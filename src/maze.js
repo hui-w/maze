@@ -27,6 +27,12 @@ Maze.prototype = {
     }
   },
 
+  /* change the grid size; call prepare() or init() afterwards to rebuild */
+  resize: function (rows, cols) {
+    this.rows = rows;
+    this.cols = cols;
+  },
+
   /* build the cells and closed walls without generating the maze */
   prepare: function () {
     //a new run invalidates any step-by-step generation still in progress
