@@ -1,0 +1,16 @@
+{
+  "name": "maze",
+  "version": "1.0.0",
+  "description": "Maze generation and A* path finding in JavaScript",
+  "private": true,
+  "license": "MIT",
+  "repository": "github:hui-w/maze",
+  "scripts": {
+    "build": "node build.js",
+    "serve": "python3 -m http.server 8123"
+  },
+  "devDependencies": {
+    "clean-css": "^5.3.3",
+    "terser": "^5.51.2"
+  }
+}
