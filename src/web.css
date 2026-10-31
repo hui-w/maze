@@ -16,7 +16,7 @@ body {
   touch-action: manipulation;
 }
 a {
-  color: #009C58;
+  color: #009c58;
 }
 #game-wrapper {
   float: left;
@@ -29,21 +29,28 @@ a {
   float: left;
   width: 280px;
 }
+/* the board fills the width in portrait, so the toolbar wraps below it: use the full width */
+@media (orientation: portrait) {
+  .toolbar {
+    float: none;
+    width: auto;
+  }
+}
 .toolbar .toolbar-subtitle {
   font-size: 11px;
   line-height: 1.5;
-  color: #8A7F6A;
+  color: #8a7f6a;
   margin-bottom: 12px;
 }
 .toolbar .toolbar-line {
   margin-bottom: 10px;
 }
 .toolbar .toolbar-separator {
-  border-bottom: 1px solid #E6D9B8;
+  border-bottom: 1px solid #e6d9b8;
   margin: 6px 0px;
 }
 .toolbar .toolbar-line .toolbar-text {
-  color: #3B3226;
+  color: #3b3226;
 }
 .toolbar .toolbar-line .toolbar-linkbutton,
 .toolbar .toolbar-footer .toolbar-linkbutton {
@@ -55,12 +62,12 @@ a {
 }
 .toolbar .toolbar-line .toolbar-linkbutton:not(.disabled):not(.selected):hover,
 .toolbar .toolbar-footer .toolbar-linkbutton:hover {
-  color: #D94530;
+  color: #d94530;
   text-decoration: underline;
 }
 .toolbar .toolbar-line .toolbar-linkbutton.disabled {
   cursor: default;
-  color: #B8AE98;
+  color: #b8ae98;
 }
 .toolbar .toolbar-line .toolbar-linkbutton.option {
   min-width: 18px;
@@ -69,18 +76,18 @@ a {
 .toolbar .toolbar-line .toolbar-linkbutton.selected {
   cursor: default;
   color: #fff;
-  background: #009C58;
+  background: #009c58;
   font-weight: bold;
 }
 .toolbar .toolbar-line .highlighted {
   font-weight: bold;
 }
 .toolbar .toolbar-footer {
-  border-top: 1px solid #E6D9B8;
+  border-top: 1px solid #e6d9b8;
   margin-top: 16px;
   padding-top: 6px;
   font-size: 11px;
-  color: #3B3226;
+  color: #3b3226;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -98,26 +105,26 @@ a {
   z-index: 10;
 }
 .about-dialog {
-  background: #FFFDF7;
-  color: #3B3226;
+  background: #fffdf7;
+  color: #3b3226;
   max-width: 520px;
   max-height: 85%;
   overflow: auto;
   padding: 20px 24px;
   border-radius: 6px;
-  border-top: 4px solid #009C58;
+  border-top: 4px solid #009c58;
   font-size: 13px;
   line-height: 1.5;
 }
 .about-dialog h2 {
   font-size: 18px;
   margin-bottom: 8px;
-  color: #0B4F33;
+  color: #0b4f33;
 }
 .about-dialog h3 {
   font-size: 14px;
   margin: 14px 0 4px;
-  color: #0B4F33;
+  color: #0b4f33;
 }
 .about-dialog .about-actions {
   margin-top: 16px;
@@ -129,7 +136,7 @@ a {
   border-radius: 3px;
   cursor: pointer;
   color: #fff;
-  background: #009C58;
+  background: #009c58;
 }
 .about-dialog .about-close:hover {
   background: #008049;
