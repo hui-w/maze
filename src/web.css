@@ -76,8 +76,7 @@ a {
 .toolbar .toolbar-line .toolbar-linkbutton.selected {
   cursor: default;
   color: #fff;
-  background: #009c58;
-  font-weight: bold;
+  background: #555;
 }
 .toolbar .toolbar-line .highlighted {
   font-weight: bold;
