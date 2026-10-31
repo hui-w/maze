@@ -3,7 +3,7 @@
 A JavaScript implementation of a **maze generation algorithm** and **A\* path finding**, rendered on an HTML5 canvas. It has no dependencies and runs directly in the browser.
 
 ## Demo
-https://hui-w.github.io/maze/
+https://www.qlike.com/maze/
 
 ![image](https://raw.githubusercontent.com/hui-w/maze/master/screenshots/maze.png)
 
