@@ -684,8 +684,15 @@ Game.prototype = {
       boardHeight / this.maze.rows,
     );
 
-    this.canvas.width = Math.round(this.maze.cols * this.cellSize);
-    this.canvas.height = Math.round(this.maze.rows * this.cellSize);
+    //back the canvas with device pixels so lines stay sharp on high-DPI screens
+    var ratio = window.devicePixelRatio || 1;
+    this.canvasWidth = Math.round(this.maze.cols * this.cellSize);
+    this.canvasHeight = Math.round(this.maze.rows * this.cellSize);
+    this.canvas.width = Math.round(this.canvasWidth * ratio);
+    this.canvas.height = Math.round(this.canvasHeight * ratio);
+    this.canvas.style.width = this.canvasWidth + "px";
+    this.canvas.style.height = this.canvasHeight + "px";
+    this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
 
     this.redraw();
   },
@@ -694,7 +701,7 @@ Game.prototype = {
     //draw the background
     this.context.save();
     this.context.fillStyle = Config.Game.backgroundColor;
-    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
     this.context.restore();
 
     //draw the maze and path
