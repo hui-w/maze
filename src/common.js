@@ -63,11 +63,11 @@ Element.prototype.removeClassName = function (b) {
 var canvasPrototype = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
 canvasPrototype.antiFuzzyLine = function (x1, y1, x2, y2) {
 	if (this.lineWidth % 2 == 1) {
-		//+0.5 to avoid fuzzy line
-		x1 -= 0.5;
-		y1 -= 0.5;
-		x2 -= 0.5;
-		y2 -= 0.5;
+		//snap to whole pixels (cell size may be fractional) and shift by 0.5 to avoid fuzzy line
+		x1 = Math.round(x1) - 0.5;
+		y1 = Math.round(y1) - 0.5;
+		x2 = Math.round(x2) - 0.5;
+		y2 = Math.round(y2) - 0.5;
 	}
 	this.moveTo(x1, y1);
 	this.lineTo(x2, y2);

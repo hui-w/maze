@@ -580,16 +580,16 @@ Game.prototype = {
   resizeCanvas: function () {
     var wrapperWidth = this.width - Config.Game.padding * 2;
     var wrapperHeight = this.height - Config.Game.padding * 2;
-    var rateWidth = wrapperWidth / this.maze.cols;
-    var rateHeight = wrapperHeight / this.maze.rows;
-    if (rateWidth > rateHeight) {
-      this.cellSize = Math.floor(rateHeight);
-    } else {
-      this.cellSize = Math.floor(rateWidth);
-    }
+    //fractional cell size so the board always fills the available space
+    var boardWidth = Math.floor(wrapperWidth);
+    var boardHeight = Math.floor(wrapperHeight);
+    this.cellSize = Math.min(
+      boardWidth / this.maze.cols,
+      boardHeight / this.maze.rows,
+    );
 
-    this.canvas.width = this.maze.cols * this.cellSize;
-    this.canvas.height = this.maze.rows * this.cellSize;
+    this.canvas.width = Math.round(this.maze.cols * this.cellSize);
+    this.canvas.height = Math.round(this.maze.rows * this.cellSize);
 
     this.redraw();
   },
