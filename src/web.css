@@ -23,6 +23,12 @@ a {
   float: left;
   width: 280px;
 }
+.toolbar .toolbar-subtitle {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #8A7F6A;
+  margin-bottom: 12px;
+}
 .toolbar .toolbar-line {
   margin-bottom: 10px;
 }

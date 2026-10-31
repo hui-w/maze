@@ -4,11 +4,11 @@
  * @licence MIT
  */
 var GameState = {
-  Setup: "Select a size and generate maze",
+  Setup: "Choose a size and generate a maze",
   Generating: "Generating maze...",
-  Playing: "Maze is ready - Find the route now",
+  Playing: "Maze ready - find your way to the exit",
   Solving: "Finding the path...",
-  Finished: "Route complete",
+  Finished: "Maze solved",
 };
 
 function Game() {
@@ -208,8 +208,13 @@ Game.prototype = {
     tools.createChild("img", {
       src: "static/logo.png",
       width: 100,
-      style: "margin: 0 0 10px 0",
+      style: "margin: 0 0 6px 0",
     });
+    tools.createChild(
+      "div",
+      { class: "toolbar-subtitle" },
+      "A JavaScript maze game using Prim's algorithm for maze generation and A* for path finding.",
+    );
     this.statusElement = this.newToolElement(
       this.newToolElement(tools, "|", false, null),
       "",
@@ -279,7 +284,7 @@ Game.prototype = {
     this.newToolElement(line, " | ", false, null);
     this.randomButton = this.newToolElement(
       line,
-      "Random Entrance & Exit",
+      "Randomize Entrance & Exit",
       false,
       function (e, obj) {
         that.randomizeEntranceAndExit();
@@ -298,7 +303,7 @@ Game.prototype = {
     //find the route: by hand or by computer
     this.newToolElement(
       this.newToolElement(part, "|", false, null),
-      "Find the route",
+      "Solve the maze",
       true,
       null,
     );
@@ -306,7 +311,7 @@ Game.prototype = {
     //by hand
     this.newToolElement(
       this.newToolElement(part, "|", false, null),
-      "&nbsp;&nbsp;By hand - use keyboard arrows",
+      "&nbsp;&nbsp;Manual - use the arrow keys",
       false,
       null,
     );
@@ -323,7 +328,7 @@ Game.prototype = {
 
     //by computer
     line = this.newToolElement(part, "|", false, null);
-    this.newToolElement(line, "&nbsp;&nbsp;By computer - ", false, null);
+    this.newToolElement(line, "&nbsp;&nbsp;Automatic - ", false, null);
     this.pathButton = this.newToolElement(
       line,
       "Show Path",
@@ -351,7 +356,7 @@ Game.prototype = {
     var footer = tools.createChild("div", {
       class: "toolbar-footer",
     });
-    footer.createChild("span", null, "Copyright (C) QLike.com");
+    footer.createChild("span", null, "Copyright \u00A9 QLike.com");
     this.newToolElement(footer, "About", false, function () {
       that.showAbout();
     });
@@ -367,30 +372,30 @@ Game.prototype = {
       class: "about-overlay",
     });
     var dialog = overlay.createChild("div", { class: "about-dialog" });
-    dialog.createChild("h2", null, "About This Implementation");
+    dialog.createChild("h2", null, "About this Maze Game");
     dialog.createChild(
       "p",
       null,
-      "The maze on QLike.com is a JavaScript implementation of a maze generation algorithm and A* path finding, drawn on an HTML5 canvas.",
+      "This game is a JavaScript implementation of maze generation and A* path finding, drawn on an HTML5 canvas.",
     );
     dialog.createChild("h3", null, "Maze generation");
     dialog.createChild(
       "p",
       null,
       "The maze is a grid of cells separated by walls, all closed at the start. " +
-        "The generator uses a randomized Prim's algorithm: pick a random cell and add its walls to a list, " +
-        "then repeatedly pick a random wall from the list. If the cells on both sides are already connected, " +
-        "the wall is discarded to avoid a loop; otherwise it is opened and the walls of the newly connected cell are added to the list. " +
-        "The result is a perfect maze with no loops and no isolated areas, so there is exactly one route between any two cells.",
+        "The generator uses a randomized Prim's algorithm. It starts from a random cell and adds that cell's walls to a list. " +
+        "It then repeatedly picks a random wall from the list. If the cells on both sides of the wall are already connected, " +
+        "the wall is discarded to avoid a loop. Otherwise the wall is opened and the walls of the newly connected cell join the list. " +
+        "The result is a perfect maze: it has no loops and no isolated areas, so there is exactly one route between any two cells.",
     );
     dialog.createChild("h3", null, "Path finding (A*)");
     dialog.createChild(
       "p",
       null,
-      "A* always expands the most promising node, scored as F = G + H, where G is the cost already travelled from the entrance " +
-        "and H is the straight-line distance to the exit. Discovered nodes wait in the open area; expanded nodes move to the closed area. " +
-        "When the exit is reached, the route is rebuilt by following the parent links back to the entrance. " +
-        "Turn animation on to watch the open and closed areas spread.",
+      "A* always expands the most promising node, scored as F = G + H. G is the cost of the route from the entrance to the node, " +
+        "and H is the straight-line distance from the node to the exit. Discovered nodes wait in the open area, and expanded nodes move to the closed area. " +
+        "When the exit is reached, the route is traced back to the entrance through the parent links. " +
+        "Turn on the animation to watch the open and closed areas spread.",
     );
     dialog.createChild("h3", null, "Source and contact");
     dialog.createChild(
