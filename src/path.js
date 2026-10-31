@@ -315,6 +315,12 @@ Path.prototype = {
       context.fill();
     }
 
+    //current node (drawn first so the entrance and exit markers stay on top)
+    context.fillStyle = Config.Path.stepColor;
+    context.beginPath();
+    drawEllipse(context, this.stepNode, cellSize, true);
+    context.fill();
+
     //entrance and exit
     context.fillStyle = Config.Path.entranceColor;
     context.beginPath();
@@ -326,20 +332,14 @@ Path.prototype = {
     drawArrow(context, this.exitNode, cellSize, true);
     context.fill();
 
-    //current node
-    context.fillStyle = Config.Path.stepColor;
-    context.beginPath();
-    drawEllipse(context, this.stepNode, cellSize, true);
-    context.fill();
-
     if (
       this.stepNode.row == this.exitNode.row &&
       this.stepNode.col == this.exitNode.col
     ) {
-      context.fillStyle = "#FF3300";
+      context.fillStyle = "#D94530";
       context.font = "50px verdana";
       context.fillTextEx(
-        "Congratulations!",
+        "Maze Solved",
         (this.maze.rows * cellSize) / 2,
         (this.maze.cols * cellSize) / 2,
         "center",

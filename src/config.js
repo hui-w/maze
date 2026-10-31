@@ -18,7 +18,7 @@ var Config = {
 	General : {},
 	Game : {
 		padding : 4,
-		backgroundColor : "#DEEDF7",
+		backgroundColor : "#FFFDF7",
 		keyboardTimerDelay : 200,
 		canvasSize : CanvasSize.Fixed,
 		gridSize : 10, //only used when canvasSize == Dynamic
@@ -28,20 +28,20 @@ var Config = {
 	Maze : {
 		rows : 16,
 		cols : 16,
-		wallColor : "RGB(0, 0, 0)",
-		highlightedWallColor : "#ff0000",
-		highlightedCellColor : "RGBA(171,174,180,0.5)",
+		wallColor : "#0B4F33",
+		highlightedWallColor : "#D94530",
+		highlightedCellColor : "RGBA(255,182,8,0.35)",
 		showStep : false,
 		stepDelay : 20
 	},
 	Path : {
-		pathColor : "RGBA(219, 69, 32, 1)",
-		entranceColor : "#436EB3",
-		exitColor : "#03A957",
-		stepColor : "#436EB3",
-		fMinColor : "#ff3300",
-		openAreaColor : "RGBA(255,0,0,0.3)",
-		closeAreaColor : "RGBA(171,174,180,0.5)",
+		pathColor : "RGBA(0,156,88,0.9)",
+		entranceColor : "#D94530",
+		exitColor : "#009C58",
+		stepColor : "#FFB608",
+		fMinColor : "#D94530",
+		openAreaColor : "RGBA(255,182,8,0.4)",
+		closeAreaColor : "RGBA(0,156,88,0.15)",
 		showStep : false,
 		stepDelay : 40
 	}

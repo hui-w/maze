@@ -11,7 +11,7 @@ body {
   font-family: "Lucida Grande", verdana, arial, helvetica, sans-serif;
 }
 a {
-  color: #00f;
+  color: #009C58;
 }
 #game-wrapper {
   float: left;
@@ -25,27 +25,31 @@ a {
   margin-bottom: 10px;
 }
 .toolbar .toolbar-separator {
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid #E6D9B8;
   margin: 6px 0px;
 }
 .toolbar .toolbar-line .toolbar-text {
-  color: #000;
+  color: #3B3226;
 }
 .toolbar .toolbar-line .toolbar-linkbutton {
   cursor: pointer;
-  color: #00f;
+  color: #008049;
+}
+.toolbar .toolbar-line .toolbar-linkbutton:not(.disabled):hover {
+  color: #D94530;
+  text-decoration: underline;
 }
 .toolbar .toolbar-line .toolbar-linkbutton.disabled {
   cursor: default;
-  color: #999;
+  color: #B8AE98;
 }
 .toolbar .toolbar-line .highlighted {
   font-weight: bold;
 }
 .toolbar .toolbar-footer {
-  border-top: 1px solid black;
+  border-top: 1px solid #E6D9B8;
   margin-top: 16px;
   padding-top: 6px;
   font-size: 11px;
-  color: #000;
+  color: #3B3226;
 }
