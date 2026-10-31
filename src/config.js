@@ -10,7 +10,7 @@ var Config = {
     keyboardTimerDelay: 200,
     dragThreshold: 12,
     defaultSize: "XS",
-    defaultSpeed: "FAST",
+    defaultAnimationDelay: "FAST",
   },
   // Maze size options: label -> cells per side
   MazeSize: { XXS: 8, XS: 16, S: 24, M: 32, L: 48, XL: 64 },

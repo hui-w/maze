@@ -16,7 +16,7 @@ function Game() {
   this.path = new Path();
   this.state = GameState.Setup;
   this.settingControls = [];
-  this.speedButtons = {};
+  this.animationDelayButtons = {};
   this.sizeButtons = {};
   this.statusElement = null;
   this.pathButton = null;
@@ -50,10 +50,10 @@ Game.prototype = {
       Config.MazeSize,
       Config.Game.defaultSize,
     );
-    this.selectedSpeed = this.loadSetting(
-      "speed",
+    this.selectedAnimationDelay = this.loadSetting(
+      "animationDelay",
       Config.AnimationDelay.MazeGeneration,
-      Config.Game.defaultSpeed,
+      Config.Game.defaultAnimationDelay,
     );
     var n = Config.MazeSize[this.selectedSize];
     this.maze.resize(n, n);
@@ -112,9 +112,7 @@ Game.prototype = {
     }
     setEnabled(
       this.generateButton,
-      s == GameState.Setup ||
-        s == GameState.Playing ||
-        s == GameState.Finished,
+      s == GameState.Setup || s == GameState.Playing || s == GameState.Finished,
     );
     setEnabled(
       this.randomButton,
@@ -230,27 +228,27 @@ Game.prototype = {
     //separator
     this.newToolElement(tools, "-", false, null);
 
-    //animation speed (applies to both maze generation and path finding)
+    //animation delays (applies to both maze generation and path finding)
     var line = this.newToolElement(tools, "|", false, null);
     this.newToolElement(line, "Animation: ", false, null);
-    var speeds = Object.keys(Config.AnimationDelay.MazeGeneration);
-    for (var i = 0; i < speeds.length; i++) {
+    var animationDelays = Object.keys(Config.AnimationDelay.MazeGeneration);
+    for (var i = 0; i < animationDelays.length; i++) {
       if (i > 0) {
         this.newToolElement(line, " ", false, null);
       }
-      this.speedButtons[speeds[i]] = this.newToolElement(
+      this.animationDelayButtons[animationDelays[i]] = this.newToolElement(
         line,
-        speeds[i],
+        animationDelays[i],
         false,
-        (function (speed) {
+        (function (animationDelay) {
           return function () {
-            that.setAnimationSpeed(speed);
-            that.saveSetting("speed", speed);
+            that.setAnimationDelay(animationDelay);
+            that.saveSetting("animationDelay", animationDelay);
           };
-        })(speeds[i]),
+        })(animationDelays[i]),
       );
-      this.speedButtons[speeds[i]].addClassName("option");
-      this.settingControls.push(this.speedButtons[speeds[i]]);
+      this.animationDelayButtons[animationDelays[i]].addClassName("option");
+      this.settingControls.push(this.animationDelayButtons[animationDelays[i]]);
     }
 
     //maze size
@@ -275,7 +273,7 @@ Game.prototype = {
       this.sizeButtons[sizes[i]].addClassName("option");
       this.settingControls.push(this.sizeButtons[sizes[i]]);
     }
-    this.setAnimationSpeed(this.selectedSpeed);
+    this.setAnimationDelay(this.selectedAnimationDelay);
     this.markSelected(this.sizeButtons, this.selectedSize);
 
     //generate
@@ -507,10 +505,11 @@ Game.prototype = {
   },
 
   /* A zero delay skips animation; other options use their configured delays */
-  setAnimationSpeed: function (speed) {
-    Config.Maze.stepDelay = Config.AnimationDelay.MazeGeneration[speed];
-    Config.Path.stepDelay = Config.AnimationDelay.PathFinding[speed];
-    this.markSelected(this.speedButtons, speed);
+  setAnimationDelay: function (animationDelay) {
+    Config.Maze.stepDelay =
+      Config.AnimationDelay.MazeGeneration[animationDelay];
+    Config.Path.stepDelay = Config.AnimationDelay.PathFinding[animationDelay];
+    this.markSelected(this.animationDelayButtons, animationDelay);
   },
 
   resizeMaze: function (size) {
@@ -626,7 +625,10 @@ Game.prototype = {
       }
 
       //stay still until the pointer has moved far enough from where it was pressed
-      if (Math.abs(dx) < Config.Game.dragThreshold && Math.abs(dy) < Config.Game.dragThreshold) {
+      if (
+        Math.abs(dx) < Config.Game.dragThreshold &&
+        Math.abs(dy) < Config.Game.dragThreshold
+      ) {
         that.arrowKeyStatus = 0;
         return;
       }
