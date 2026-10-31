@@ -55,7 +55,10 @@ Game.prototype = {
     function updateUI() {
       that.redraw();
     }
-    this.maze.onUpdateUI = updateUI;
+    this.maze.onUpdateUI = function () {
+      updateUI();
+      that.updateProgress();
+    };
     this.path.onUpdateUI = updateUI;
 
     //initialize the maze; when it's done, initialize the path
@@ -87,7 +90,8 @@ Game.prototype = {
 
   updateToolbar: function () {
     var s = this.state;
-    this.statusElement.innerHTML = s;
+    this.statusElement.innerHTML = s + "<span></span>";
+    this.updateProgress();
     function setEnabled(element, enabled) {
       if (enabled) {
         element.removeClassName("disabled");
@@ -113,6 +117,18 @@ Game.prototype = {
       s == GameState.Playing || s == GameState.Finished,
     );
     setEnabled(this.pathButton, s == GameState.Playing);
+  },
+
+  /* show the generation percentage next to the status text */
+  updateProgress: function () {
+    var element = this.statusElement.lastChild;
+    if (!element) {
+      return;
+    }
+    element.innerHTML =
+      this.state == GameState.Generating
+        ? " " + Math.floor(this.maze.getProgress() * 100) + "%"
+        : "";
   },
 
   /* pick a new entrance and exit; the player goes back to the entrance */

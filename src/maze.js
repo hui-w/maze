@@ -27,6 +27,11 @@ Maze.prototype = {
     }
   },
 
+  /* generation progress, 0 to 1 */
+  getProgress: function () {
+    return this.cells.length ? this.connectedCount / this.cells.length : 0;
+  },
+
   /* change the grid size; call prepare() or init() afterwards to rebuild */
   resize: function (rows, cols) {
     this.rows = rows;
@@ -38,6 +43,7 @@ Maze.prototype = {
     //a new run invalidates any step-by-step generation still in progress
     this.runId = (this.runId || 0) + 1;
     this.tempWalls = [];
+    this.connectedCount = 0;
 
     //clear old values
     this.cells = [];
@@ -151,6 +157,7 @@ Maze.prototype = {
   fetchClosingWalls: function (walls, cell) {
     //set the cell as connected
     cell.setConnected(true);
+    this.connectedCount++;
 
     //get all the closing walls, and add them into the temp list
     for (var i = 0; i < cell.walls.length; i++) {
