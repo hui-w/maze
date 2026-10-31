@@ -29,8 +29,6 @@ var Config = {
     },
   },
   Maze: {
-    rows: 16,
-    cols: 16,
     wallColor: "#0B4F33",
     highlightedWallColor: "#D94530",
     highlightedCellColor: "RGBA(255,182,8,0.35)",

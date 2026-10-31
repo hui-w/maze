@@ -12,7 +12,8 @@ var GameState = {
 };
 
 function Game() {
-  this.maze = new Maze(Config.Maze.rows, Config.Maze.cols);
+  var size = Config.MazeSize[Config.Game.defaultSize];
+  this.maze = new Maze(size, size);
   this.path = new Path();
   this.state = GameState.Setup;
   this.settingControls = [];
@@ -55,8 +56,8 @@ Game.prototype = {
       Config.AnimationDelay.MazeGeneration,
       Config.Game.defaultAnimationDelay,
     );
-    var n = Config.MazeSize[this.selectedSize];
-    this.maze.resize(n, n);
+    var size = Config.MazeSize[this.selectedSize];
+    this.maze.resize(size, size);
     this.render();
 
     //maze and path events
