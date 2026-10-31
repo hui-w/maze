@@ -16,6 +16,9 @@ a {
 #game-wrapper {
   float: left;
 }
+#game-wrapper canvas {
+  display: block;
+}
 .toolbar {
   float: left;
   margin: 4px;

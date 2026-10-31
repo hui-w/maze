@@ -250,7 +250,7 @@ Game.prototype = {
       this.sizeButtons[sizes[i]].addClassName("option");
       this.settingControls.push(this.sizeButtons[sizes[i]]);
     }
-    this.markSelected(this.speedButtons, "OFF");
+    this.setAnimationSpeed("FAST");
     this.markSelected(this.sizeButtons, "XS");
 
     //generate

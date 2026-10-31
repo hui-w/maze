@@ -336,7 +336,7 @@ Path.prototype = {
       this.stepNode.row == this.exitNode.row &&
       this.stepNode.col == this.exitNode.col
     ) {
-      context.fillStyle = "#D94530";
+      context.fillStyle = "#0B4F33";
       context.font = "50px verdana";
       context.fillTextEx(
         "Maze Solved",
