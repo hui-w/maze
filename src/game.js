@@ -397,12 +397,12 @@ Game.prototype = {
         "When the exit is reached, the route is traced back to the entrance through the parent links. " +
         "Turn on the animation to watch the open and closed areas spread.",
     );
-    dialog.createChild("h3", null, "Source and contact");
+    dialog.createChild("h3", null, "Source and feedback");
     dialog.createChild(
       "p",
       null,
       'GitHub: <a href="https://github.com/hui-w/maze" target="_blank">https://github.com/hui-w/maze</a><br>' +
-        'Contact: <a href="mailto:webmaster@qlike.com">webmaster@qlike.com</a>',
+        'Feedback: <a href="mailto:webmaster@qlike.com">webmaster@qlike.com</a>',
     );
     var close = function () {
       document.removeEventListener("keydown", onKey, false);
