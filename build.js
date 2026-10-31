@@ -34,9 +34,13 @@ async function build() {
   }
   fs.writeFileSync(path.join(out, "app.min.css"), css.styles);
 
-  fs.copyFileSync(
-    path.join(src, "index_release.html"),
+  // the version from package.json goes into the asset URLs to bust browser caches
+  const version = require("./package.json").version;
+  fs.writeFileSync(
     path.join(out, "index.html"),
+    fs
+      .readFileSync(path.join(src, "index_release.html"), "utf8")
+      .replace(/\{\{version\}\}/g, version),
   );
   fs.cpSync(path.join(src, "static"), path.join(out, "static"), {
     recursive: true,
