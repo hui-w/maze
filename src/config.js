@@ -9,7 +9,11 @@ var Config = {
     backgroundColor: "#FFFDF7",
     keyboardTimerDelay: 200,
     dragThreshold: 12,
+    defaultSize: "XS",
+    defaultSpeed: "FAST",
   },
+  // Maze size options: label -> cells per side
+  MazeSize: { XXS: 8, XS: 16, S: 24, M: 32, L: 48, XL: 64 },
   AnimationDelay: {
     MazeGeneration: {
       OFF: 0,
@@ -40,6 +44,3 @@ var Config = {
     closeAreaColor: "RGBA(0,156,88,0.15)",
   },
 };
-
-Config.Maze.stepDelay = Config.AnimationDelay.MazeGeneration.NORMAL;
-Config.Path.stepDelay = Config.AnimationDelay.PathFinding.NORMAL;
