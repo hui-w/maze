@@ -281,7 +281,7 @@ Game.prototype = {
     this.newToolElement(line, " | ", false, null);
     this.randomButton = this.newToolElement(
       line,
-      "Randomize Entrance & Exit",
+      "New Entrance & Exit",
       false,
       function (e, obj) {
         that.randomizeEntranceAndExit();
@@ -308,7 +308,7 @@ Game.prototype = {
     //by hand
     this.newToolElement(
       this.newToolElement(part, "|", false, null),
-      "&nbsp;&nbsp;Manual - arrow keys or drag",
+      "&nbsp;&nbsp;Manual - use arrow keys or drag",
       false,
       null,
     );
