@@ -61,7 +61,8 @@ The release files are the source files concatenated and minified:
 
 ```
 cat src/common.js src/config.js src/game.js src/maze.js src/path.js > app.js
-npx terser app.js -c -m -o release/app.min.js
+npx terser app.js -c -m --comments false -o app.min.js
+(sed -n 1,5p src/common.js; cat app.min.js) > release/app.min.js
 java -jar build/yuicompressor-2.4.7.jar -o release/app.min.css src/web.css
 ```
 
