@@ -499,7 +499,7 @@ Game.prototype = {
       return;
     }
     var that = this;
-    var keyCode = event.keyCode;
+    var keyCode = e.keyCode;
     switch (keyCode) {
       case 37:
         this.arrowKeyStatus |= 1;
@@ -557,7 +557,7 @@ Game.prototype = {
 
   /* keyboard events: key up */
   keyUp: function (e) {
-    var keyCode = event.keyCode;
+    var keyCode = e.keyCode;
     switch (keyCode) {
       case 37:
         this.arrowKeyStatus &= ~1;
