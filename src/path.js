@@ -191,7 +191,7 @@ Path.prototype = {
       if (!this.closeArea[neighborNode.id]) {
         var fObj = this.getF(node, neighborNode);
         // to the around node, if it exists in open area, get the new G value for it; if the new G is smaller, change its parent to current node
-        tmpNode = this.inOpenArea(neighborNode);
+        var tmpNode = this.inOpenArea(neighborNode);
         if (tmpNode) {
           if (tmpNode.fObj.G <= fObj.G) continue;
         }
@@ -271,7 +271,7 @@ Path.prototype = {
     if (Config.Path.showStep) {
       //close area
       context.beginPath();
-      for (key in this.closeArea) {
+      for (var key in this.closeArea) {
         drawRectangle(context, this.closeArea[key], cellSize, false);
       }
       context.fillStyle = Config.Path.closeAreaColor;
@@ -340,8 +340,8 @@ Path.prototype = {
       context.font = "50px verdana";
       context.fillTextEx(
         "Maze Solved",
-        (this.maze.rows * cellSize) / 2,
         (this.maze.cols * cellSize) / 2,
+        (this.maze.rows * cellSize) / 2,
         "center",
         "middle",
       );

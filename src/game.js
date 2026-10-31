@@ -146,9 +146,6 @@ Game.prototype = {
       width: 0,
       height: 0,
     });
-    if (typeof G_vmlCanvasManager != "undefined") {
-      this.canvas = G_vmlCanvasManager.initElement(this.canvas);
-    }
     this.context = this.canvas.getContext("2d");
 
     //calculate the grid size and canvas size
@@ -583,16 +580,16 @@ Game.prototype = {
   resizeCanvas: function () {
     var wrapperWidth = this.width - Config.Game.padding * 2;
     var wrapperHeight = this.height - Config.Game.padding * 2;
-    var rateWidth = wrapperWidth / this.maze.rows;
-    var rateHeight = wrapperHeight / this.maze.cols;
+    var rateWidth = wrapperWidth / this.maze.cols;
+    var rateHeight = wrapperHeight / this.maze.rows;
     if (rateWidth > rateHeight) {
       this.cellSize = Math.floor(rateHeight);
     } else {
       this.cellSize = Math.floor(rateWidth);
     }
 
-    this.canvas.width = this.maze.rows * this.cellSize;
-    this.canvas.height = this.maze.cols * this.cellSize;
+    this.canvas.width = this.maze.cols * this.cellSize;
+    this.canvas.height = this.maze.rows * this.cellSize;
 
     this.redraw();
   },

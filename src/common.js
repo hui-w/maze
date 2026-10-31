@@ -32,7 +32,7 @@ Element.prototype.createChild = function (tag, param, innerHTML) {
 	var element = document.createElement(tag);
 	this.appendChild(element);
 	if (param) {
-		for (key in param) {
+		for (var key in param) {
 			element.setAttribute(key, param[key]);
 		}
 	}
@@ -63,8 +63,6 @@ Element.prototype.removeClassName = function (b) {
 var canvasPrototype = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
 canvasPrototype.antiFuzzyLine = function (x1, y1, x2, y2) {
 	if (this.lineWidth % 2 == 1) {
-		if (this.lineWidth > 1)
-			console.log(this.lineWidth);
 		//+0.5 to avoid fuzzy line
 		x1 -= 0.5;
 		y1 -= 0.5;

@@ -3,27 +3,11 @@
 * @repo https://github.com/hui-w/maze
 * @licence MIT 
 */ 
-var CanvasSize = {
-	//fixed width and height of canvas
-	Fixed : 0,
-
-	//width and height are calculated by grid size and the maze size
-	Dynamic : 1,
-
-	//full screen with window width and height
-	Fullscreen : 2
-}
-
 var Config = {
-	General : {},
 	Game : {
 		padding : 4,
 		backgroundColor : "#FFFDF7",
-		keyboardTimerDelay : 200,
-		canvasSize : CanvasSize.Fixed,
-		gridSize : 10, //only used when canvasSize == Dynamic
-		width : 500, //only used when canvasSize == fixed
-		height : 500 //only used when canvasSize == fixed
+		keyboardTimerDelay : 200
 	},
 	Maze : {
 		rows : 16,

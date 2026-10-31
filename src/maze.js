@@ -62,10 +62,10 @@ Maze.prototype = {
 
   generateWalls: function () {
     for (var i = 0; i < this.rows * this.cols; i++) {
-      if (i / this.rows < this.cols - 1) {
+      if (i / this.cols < this.rows - 1) {
         //horizontal walls
         var cellA = this.cells[i];
-        var cellB = this.cells[i + this.rows];
+        var cellB = this.cells[i + this.cols];
         var wall = new Wall(cellA, cellB);
         this.walls.push(wall);
 
@@ -73,7 +73,7 @@ Maze.prototype = {
         cellB.walls.push(wall);
       }
 
-      if (i % this.rows < this.rows - 1) {
+      if (i % this.cols < this.cols - 1) {
         //vertical walls
         var cellA = this.cells[i];
         var cellB = this.cells[i + 1];
