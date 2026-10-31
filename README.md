@@ -82,6 +82,10 @@ npm run serve
 
 Then open http://localhost:8123/release/index.html (or `src/index.html` for the unminified sources).
 
+## AI assistants
+
+See [AGENTS.md](AGENTS.md) for guidance on testing and releasing.
+
 ## License
 
 MIT
