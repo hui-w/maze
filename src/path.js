@@ -12,7 +12,6 @@ function Path() {
   this.entranceNode = null;
   this.exitNode = null;
   this.stepNode = null;
-  this.fMinNode = null;
   this.path = [];
 
   this.onUpdateUI = null;
@@ -30,6 +29,9 @@ Path.prototype = {
 
   pathComplete: function () {
     if (this.pathFound()) {
+      //park the marker on the exit, under the exit square
+      this.stepNode = this.exitNode;
+
       //full path
       this.path.push({
         row: this.exitNode.row,
@@ -64,7 +66,6 @@ Path.prototype = {
     this.entranceNode = null;
     this.exitNode = null;
     this.stepNode = null;
-    this.fMinNode = null;
     this.openArea = [];
     this.closeArea = {};
     this.path = [];
@@ -121,12 +122,12 @@ Path.prototype = {
     if (!Config.Path.showStep) {
       //run to the end
       while (!this.pathFound()) {
-        this.fMinNode = this.getOpenNodeWithMinF();
-        if (!this.fMinNode) {
+        this.stepNode = this.getOpenNodeWithMinF();
+        if (!this.stepNode) {
           //no more nodes in the open list
           break;
         }
-        this.neighboursIntoOpenArea(this.fMinNode);
+        this.neighboursIntoOpenArea(this.stepNode);
       }
 
       //already reach the exit
@@ -137,15 +138,14 @@ Path.prototype = {
         if (Config.Path.showStep) {
           //path step may be turned off any time during the timer
           if (!that.pathFound()) {
-            that.fMinNode = that.getOpenNodeWithMinF();
-            if (that.fMinNode) {
-              that.neighboursIntoOpenArea(that.fMinNode);
+            that.stepNode = that.getOpenNodeWithMinF();
+            if (that.stepNode) {
+              that.neighboursIntoOpenArea(that.stepNode);
               that.updateUI();
               setTimeout(runStep, Config.Path.stepDelay);
             }
           } else {
-            //already reach the exit; the search marker is no longer needed
-            that.fMinNode = null;
+            //already reach the exit
             that.pathComplete();
           }
         }
@@ -308,15 +308,7 @@ Path.prototype = {
       context.stroke();
     }
 
-    //F Min Node
-    if (Config.Path.showStep && this.fMinNode != null) {
-      context.fillStyle = Config.Path.fMinColor;
-      context.beginPath();
-      drawEllipse(context, this.fMinNode, cellSize, true);
-      context.fill();
-    }
-
-    //current node (drawn first so the entrance and exit markers stay on top)
+    //the player and A* search share one marker because they run in separate modes
     context.fillStyle = Config.Path.stepColor;
     context.beginPath();
     drawEllipse(context, this.stepNode, cellSize, true);
@@ -325,12 +317,12 @@ Path.prototype = {
     //entrance and exit
     context.fillStyle = Config.Path.entranceColor;
     context.beginPath();
-    drawRectangle(context, this.entranceNode, cellSize, true);
+    drawArrow(context, this.entranceNode, cellSize, true);
     context.fill();
 
     context.fillStyle = Config.Path.exitColor;
     context.beginPath();
-    drawArrow(context, this.exitNode, cellSize, true);
+    drawRectangle(context, this.exitNode, cellSize, true);
     context.fill();
 
     if (
@@ -389,7 +381,6 @@ Path.prototype = {
     this.entranceNode = this.getNode(row1, col1);
     this.exitNode = this.getNode(row2, col2);
     this.stepNode = this.getNode(row1, col1);
-    this.fMinNode = null;
     this.openArea = [];
     this.closeArea = {};
     this.path = [];

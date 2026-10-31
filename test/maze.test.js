@@ -84,6 +84,7 @@ sizes.forEach(function (size) {
     p.getPath();
 
     assert.ok(p.pathFound(), "exit should be reached");
+    assert.strictEqual(p.stepNode, p.exitNode, "marker should finish at the exit");
 
     //the route is stored from exit to entrance
     const route = p.path;

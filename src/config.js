@@ -24,7 +24,6 @@ var Config = {
 		entranceColor : "#D94530",
 		exitColor : "#009C58",
 		stepColor : "#FFB608",
-		fMinColor : "#D94530",
 		openAreaColor : "RGBA(255,182,8,0.4)",
 		closeAreaColor : "RGBA(0,156,88,0.15)",
 		showStep : false,
