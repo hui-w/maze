@@ -12,6 +12,7 @@ function Path() {
   this.entranceNode = null;
   this.exitNode = null;
   this.stepNode = null;
+  this.manuallySolved = false;
   this.path = [];
 
   this.onUpdateUI = null;
@@ -66,6 +67,7 @@ Path.prototype = {
     this.entranceNode = null;
     this.exitNode = null;
     this.stepNode = null;
+    this.manuallySolved = false;
     this.openArea = [];
     this.closeArea = {};
     this.path = [];
@@ -101,6 +103,7 @@ Path.prototype = {
   },
 
   getPath: function () {
+    this.manuallySolved = false;
     var that = this;
     if (this.entranceNode == null || this.exitNode == null) {
       return;
@@ -308,11 +311,14 @@ Path.prototype = {
       context.stroke();
     }
 
-    //the player and A* search share one marker because they run in separate modes
-    context.fillStyle = Config.Path.stepColor;
-    context.beginPath();
-    drawEllipse(context, this.stepNode, cellSize, true);
-    context.fill();
+    var markerAtExit = this.isAtExit();
+    if (!markerAtExit) {
+      //the player and A* search share one marker because they run in separate modes
+      context.fillStyle = Config.Path.stepColor;
+      context.beginPath();
+      drawEllipse(context, this.stepNode, cellSize, true);
+      context.fill();
+    }
 
     //entrance and exit
     context.fillStyle = Config.Path.entranceColor;
@@ -325,10 +331,14 @@ Path.prototype = {
     drawRectangle(context, this.exitNode, cellSize, true);
     context.fill();
 
-    if (
-      this.stepNode.row == this.exitNode.row &&
-      this.stepNode.col == this.exitNode.col
-    ) {
+    if (markerAtExit) {
+      context.fillStyle = Config.Path.stepColor;
+      context.beginPath();
+      drawEllipse(context, this.stepNode, cellSize, true);
+      context.fill();
+    }
+
+    if (this.manuallySolved) {
       context.fillStyle = "#0B4F33";
       context.font = "50px verdana";
       context.fillTextEx(
@@ -381,6 +391,7 @@ Path.prototype = {
     this.entranceNode = this.getNode(row1, col1);
     this.exitNode = this.getNode(row2, col2);
     this.stepNode = this.getNode(row1, col1);
+    this.manuallySolved = false;
     this.openArea = [];
     this.closeArea = {};
     this.path = [];
@@ -397,6 +408,7 @@ Path.prototype = {
     var nextNode = this.getNode(nextRow, nextCol);
     if (nextNode != null && this.stepNode.canGoTo(nextNode)) {
       this.stepNode = nextNode;
+      this.manuallySolved = this.isAtExit();
       this.stepCounter++;
       this.updateUI();
       return true;

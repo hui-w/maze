@@ -20,7 +20,7 @@ var Config = {
 		stepDelay : 20
 	},
 	Path : {
-		pathColor : "RGBA(0,156,88,0.9)",
+		pathColor : "RGBA(255,182,8,0.65)",
 		entranceColor : "#D94530",
 		exitColor : "#009C58",
 		stepColor : "#FFB608",

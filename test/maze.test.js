@@ -85,6 +85,7 @@ sizes.forEach(function (size) {
 
     assert.ok(p.pathFound(), "exit should be reached");
     assert.strictEqual(p.stepNode, p.exitNode, "marker should finish at the exit");
+    assert.strictEqual(p.manuallySolved, false, "A* should not count as a manual solve");
 
     //the route is stored from exit to entrance
     const route = p.path;
@@ -105,6 +106,21 @@ sizes.forEach(function (size) {
       const to = p.getNode(route[i].row, route[i].col);
       assert.ok(from.canGoTo(to), "step " + i + " crosses a wall");
     }
+
+    p.setEntranceAndExit(
+      p.entranceNode.row,
+      p.entranceNode.col,
+      p.exitNode.row,
+      p.exitNode.col,
+    );
+    for (let i = route.length - 2; i >= 0; i--) {
+      const target = route[i];
+      assert.ok(
+        p.moveStep(target.row - p.stepNode.row, target.col - p.stepNode.col),
+        "manual step " + i + " should reach the next cell",
+      );
+    }
+    assert.strictEqual(p.manuallySolved, true, "manual arrival should mark the maze solved");
   });
 });
 
