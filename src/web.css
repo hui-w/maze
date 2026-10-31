@@ -34,14 +34,27 @@ a {
 .toolbar .toolbar-line .toolbar-linkbutton {
   cursor: pointer;
   color: #008049;
+  display: inline-block;
+  padding: 3px 6px;
+  border-radius: 3px;
 }
-.toolbar .toolbar-line .toolbar-linkbutton:not(.disabled):hover {
+.toolbar .toolbar-line .toolbar-linkbutton:not(.disabled):not(.selected):hover {
   color: #D94530;
   text-decoration: underline;
 }
 .toolbar .toolbar-line .toolbar-linkbutton.disabled {
   cursor: default;
   color: #B8AE98;
+}
+.toolbar .toolbar-line .toolbar-linkbutton.option {
+  min-width: 18px;
+  text-align: center;
+}
+.toolbar .toolbar-line .toolbar-linkbutton.selected {
+  cursor: default;
+  color: #fff;
+  background: #009C58;
+  font-weight: bold;
 }
 .toolbar .toolbar-line .highlighted {
   font-weight: bold;

@@ -16,6 +16,8 @@ function Game() {
   this.path = new Path();
   this.state = GameState.Setup;
   this.settingControls = [];
+  this.speedButtons = {};
+  this.sizeButtons = {};
   this.statusElement = null;
   this.pathButton = null;
   this.generateButton = null;
@@ -207,67 +209,49 @@ Game.prototype = {
 
     //animation speed (applies to both maze generation and path finding)
     var line = this.newToolElement(tools, "|", false, null);
-    this.newToolElement(line, "Animation - ", false, null);
-    line.createChild(
-      "span",
-      {
-        id: "animation-speed",
-        class: "highlighted",
-      },
-      "OFF",
-    );
-    this.newToolElement(line, " [", false, null);
-    var speeds = ["OFF", "Fast", "Medium", "Slow"];
+    this.newToolElement(line, "Animation: ", false, null);
+    var speeds = ["OFF", "FAST", "NORMAL", "SLOW"];
     for (var i = 0; i < speeds.length; i++) {
       if (i > 0) {
         this.newToolElement(line, " ", false, null);
       }
-      this.settingControls.push(
-        this.newToolElement(
-          line,
-          speeds[i],
-          false,
-          (function (speed) {
-            return function () {
-              that.setAnimationSpeed(speed);
-            };
-          })(speeds[i]),
-        ),
+      this.speedButtons[speeds[i]] = this.newToolElement(
+        line,
+        speeds[i],
+        false,
+        (function (speed) {
+          return function () {
+            that.setAnimationSpeed(speed);
+          };
+        })(speeds[i]),
       );
+      this.speedButtons[speeds[i]].addClassName("option");
+      this.settingControls.push(this.speedButtons[speeds[i]]);
     }
-    this.newToolElement(line, "]", false, null);
 
     //maze size
     line = this.newToolElement(tools, "|", false, null);
-    this.newToolElement(line, "Maze Size - ", false, null);
-    line.createChild(
-      "span",
-      {
-        id: "maze-size",
-        class: "highlighted",
-      },
-      "XS",
-    );
-    this.newToolElement(line, " [", false, null);
-    var sizes = ["XS", "S", "M", "L", "XL"];
+    this.newToolElement(line, "Maze Size: ", false, null);
+    var sizes = ["XXS", "XS", "S", "M", "L", "XL"];
     for (var i = 0; i < sizes.length; i++) {
       if (i > 0) {
         this.newToolElement(line, " ", false, null);
       }
-      this.settingControls.push(
-        this.newToolElement(
-          line,
-          sizes[i],
-          false,
-          (function (size) {
-            return function () {
-              that.resizeMaze(size);
-            };
-          })(sizes[i]),
-        ),
+      this.sizeButtons[sizes[i]] = this.newToolElement(
+        line,
+        sizes[i],
+        false,
+        (function (size) {
+          return function () {
+            that.resizeMaze(size);
+          };
+        })(sizes[i]),
       );
+      this.sizeButtons[sizes[i]].addClassName("option");
+      this.settingControls.push(this.sizeButtons[sizes[i]]);
     }
-    this.newToolElement(line, "]", false, null);
+    this.markSelected(this.speedButtons, "OFF");
+    this.markSelected(this.sizeButtons, "XS");
 
     //generate
     line = this.newToolElement(tools, "|", false, null);
@@ -390,7 +374,7 @@ Game.prototype = {
         text,
       );
       element.onclick = function (e) {
-        if (this.hasClassName("disabled")) {
+        if (this.hasClassName("disabled") || this.hasClassName("selected")) {
           return;
         }
         handler(e, this);
@@ -402,19 +386,34 @@ Game.prototype = {
     return element;
   },
 
-  /* Medium keeps the original step delays; Fast and Slow scale them */
+  /* the chosen option is highlighted and no longer clickable */
+  markSelected: function (buttons, value) {
+    for (var key in buttons) {
+      if (key == value) {
+        buttons[key].addClassName("selected");
+      } else {
+        buttons[key].removeClassName("selected");
+      }
+    }
+  },
+
+  /* Normal keeps the original step delays, Slow quadruples them, Fast is 4ms (the browser timer minimum) */
   setAnimationSpeed: function (speed) {
-    var scale = { Slow: 2, Medium: 1, Fast: 0.1 }[speed];
+    var scale = { SLOW: 4, NORMAL: 1, FAST: 0 }[speed];
     Config.Maze.showStep = Config.Path.showStep = scale != null;
     if (scale != null) {
-      Config.Maze.stepDelay = this.baseDelay.maze * scale;
-      Config.Path.stepDelay = this.baseDelay.path * scale;
+      Config.Maze.stepDelay = scale ? this.baseDelay.maze * scale : 4;
+      Config.Path.stepDelay = scale ? this.baseDelay.path * scale : 4;
     }
-    $("animation-speed").innerHTML = speed;
+    this.markSelected(this.speedButtons, speed);
   },
 
   resizeMaze: function (size) {
     switch (size) {
+      case "XXS":
+        this.maze.rows = 8;
+        this.maze.cols = 8;
+        break;
       case "XS":
         this.maze.rows = 16;
         this.maze.cols = 16;
@@ -437,7 +436,7 @@ Game.prototype = {
         break;
     }
 
-    $("maze-size").innerHTML = size;
+    this.markSelected(this.sizeButtons, size);
     this.resizeCanvas();
     this.prepareMaze();
   },
