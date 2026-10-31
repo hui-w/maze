@@ -21,7 +21,6 @@ a {
 }
 .toolbar {
   float: left;
-  margin: 4px;
   width: 280px;
 }
 .toolbar .toolbar-line {

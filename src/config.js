@@ -5,7 +5,7 @@
 */ 
 var Config = {
 	Game : {
-		padding : 4,
+		padding : 12,
 		backgroundColor : "#FFFDF7",
 		keyboardTimerDelay : 200
 	},
