@@ -575,28 +575,35 @@ Game.prototype = {
     keyboardTimerHandler();
   },
 
-  /* touch and mouse: hold and drag on the maze, the player moves towards the pointer */
+  /* touch and mouse: press anywhere on the maze and drag; the player moves in the drag direction while held */
   bindPointer: function () {
     var that = this;
     var canvas = this.canvas;
     var activePointer = null;
+    var startX = 0;
+    var startY = 0;
 
     function update(e) {
-      var node = that.path.stepNode;
-      if (that.state != GameState.Playing || node == null) {
+      if (that.state != GameState.Playing) {
         that.stopMoving();
         return;
       }
-      //canvas pixels, in case the canvas is scaled by CSS
-      var rect = canvas.getBoundingClientRect();
-      var x = ((e.clientX - rect.left) * canvas.width) / rect.width;
-      var y = ((e.clientY - rect.top) * canvas.height) / rect.height;
-      var dx = x - (node.col + 0.5) * that.cellSize;
-      var dy = y - (node.row + 0.5) * that.cellSize;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
 
-      //ignore the pointer while it is still on the player's cell
-      var dead = that.cellSize * 0.5;
-      if (Math.abs(dx) < dead && Math.abs(dy) < dead) {
+      //the press point trails behind the finger, so changing direction only needs a short drag
+      var max = Config.Game.dragThreshold * 3;
+      if (Math.abs(dx) > max) {
+        startX += dx - (dx > 0 ? max : -max);
+        dx = dx > 0 ? max : -max;
+      }
+      if (Math.abs(dy) > max) {
+        startY += dy - (dy > 0 ? max : -max);
+        dy = dy > 0 ? max : -max;
+      }
+
+      //stay still until the pointer has moved far enough from where it was pressed
+      if (Math.abs(dx) < Config.Game.dragThreshold && Math.abs(dy) < Config.Game.dragThreshold) {
         that.arrowKeyStatus = 0;
         return;
       }
@@ -620,8 +627,9 @@ Game.prototype = {
         return;
       }
       activePointer = e.pointerId;
+      startX = e.clientX;
+      startY = e.clientY;
       canvas.setPointerCapture(e.pointerId);
-      update(e);
     });
     canvas.addEventListener("pointermove", function (e) {
       if (activePointer == e.pointerId) {

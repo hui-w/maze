@@ -7,7 +7,8 @@ var Config = {
 	Game : {
 		padding : 12,
 		backgroundColor : "#FFFDF7",
-		keyboardTimerDelay : 200
+		keyboardTimerDelay : 200,
+		dragThreshold : 12
 	},
 	Maze : {
 		rows : 16,
