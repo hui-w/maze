@@ -144,7 +144,8 @@ Path.prototype = {
               setTimeout(runStep, Config.Path.stepDelay);
             }
           } else {
-            //already reach the exit
+            //already reach the exit; the search marker is no longer needed
+            that.fMinNode = null;
             that.pathComplete();
           }
         }
