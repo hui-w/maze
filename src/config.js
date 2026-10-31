@@ -11,7 +11,7 @@ var Config = {
     dragThreshold: 12,
   },
   AnimationDelay: {
-    Generate: {
+    MazeGeneration: {
       OFF: 0,
       FAST: 8,
       NORMAL: 32,
@@ -41,5 +41,5 @@ var Config = {
   },
 };
 
-Config.Maze.stepDelay = Config.AnimationDelay.Generate.NORMAL;
+Config.Maze.stepDelay = Config.AnimationDelay.MazeGeneration.NORMAL;
 Config.Path.stepDelay = Config.AnimationDelay.PathFinding.NORMAL;

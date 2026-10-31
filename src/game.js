@@ -477,7 +477,7 @@ Game.prototype = {
 
   /* A zero delay skips animation; other options use their configured delays */
   setAnimationSpeed: function (speed) {
-    Config.Maze.stepDelay = Config.AnimationDelay.Generate[speed];
+    Config.Maze.stepDelay = Config.AnimationDelay.MazeGeneration[speed];
     Config.Path.stepDelay = Config.AnimationDelay.PathFinding[speed];
     this.markSelected(this.speedButtons, speed);
   },
