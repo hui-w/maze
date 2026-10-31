@@ -104,7 +104,7 @@ Maze.prototype = {
       this.cells[rand(0, this.cells.length - 1)],
     );
 
-    if (!Config.Maze.showStep) {
+    if (Config.Maze.stepDelay == 0) {
       while (this.tempWalls.length > 0) {
         this.processRandomWall(false);
       }
@@ -220,7 +220,7 @@ Maze.prototype = {
     context.stroke();
 
     //temp walls
-    if (Config.Maze.showStep) {
+    if (Config.Maze.stepDelay > 0) {
       context.beginPath();
       //walls
       for (var i = 0; i < this.tempWalls.length; i++) {

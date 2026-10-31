@@ -22,10 +22,6 @@ function Game() {
   this.pathButton = null;
   this.generateButton = null;
   this.randomButton = null;
-  this.baseDelay = {
-    maze: Config.Maze.stepDelay,
-    path: Config.Path.stepDelay,
-  };
   this.autoPath = false;
   this.playPart = null;
 
@@ -479,14 +475,10 @@ Game.prototype = {
     }
   },
 
-  /* Normal keeps the original step delays, Slow quadruples them, Fast is 4ms (the browser timer minimum) */
+  /* A zero delay skips animation; other options use their configured delays */
   setAnimationSpeed: function (speed) {
-    var scale = { SLOW: 4, NORMAL: 1, FAST: 0 }[speed];
-    Config.Maze.showStep = Config.Path.showStep = scale != null;
-    if (scale != null) {
-      Config.Maze.stepDelay = scale ? this.baseDelay.maze * scale : 4;
-      Config.Path.stepDelay = scale ? this.baseDelay.path * scale : 4;
-    }
+    Config.Maze.stepDelay = Config.AnimationDelay.Generate[speed];
+    Config.Path.stepDelay = Config.AnimationDelay.PathFinding[speed];
     this.markSelected(this.speedButtons, speed);
   },
 

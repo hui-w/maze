@@ -16,7 +16,7 @@ function load() {
     const code = fs.readFileSync(path.join(__dirname, "..", "src", file), "utf8");
     vm.runInContext(code, context, { filename: file });
   });
-  vm.runInContext("Config.Maze.showStep = false; Config.Path.showStep = false;", context);
+  vm.runInContext("Config.Maze.stepDelay = 0; Config.Path.stepDelay = 0;", context);
   return context;
 }
 

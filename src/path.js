@@ -122,7 +122,7 @@ Path.prototype = {
     }
 
     //search until reach the end node
-    if (!Config.Path.showStep) {
+    if (Config.Path.stepDelay == 0) {
       //run to the end
       while (!this.pathFound()) {
         this.stepNode = this.getOpenNodeWithMinF();
@@ -138,7 +138,7 @@ Path.prototype = {
     } else {
       //run step by step
       function runStep() {
-        if (Config.Path.showStep) {
+        if (Config.Path.stepDelay > 0) {
           //path step may be turned off any time during the timer
           if (!that.pathFound()) {
             that.stepNode = that.getOpenNodeWithMinF();
@@ -272,7 +272,7 @@ Path.prototype = {
 
     context.save();
 
-    if (Config.Path.showStep) {
+    if (Config.Path.stepDelay > 0) {
       //close area
       context.beginPath();
       for (var key in this.closeArea) {
