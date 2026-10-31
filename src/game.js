@@ -334,13 +334,80 @@ Game.prototype = {
       "N/A",
     );
 
-    tools.createChild(
-      "div",
-      {
-        class: "toolbar-footer",
-      },
-      "Copyright (C) QLike.com",
+    //footer: copyright and about
+    var footer = tools.createChild("div", {
+      class: "toolbar-footer",
+    });
+    footer.createChild("span", null, "Copyright (C) QLike.com");
+    this.newToolElement(footer, "About", false, function () {
+      that.showAbout();
+    });
+  },
+
+  /* modal dialog describing the game */
+  showAbout: function () {
+    if ($("about-overlay")) {
+      return;
+    }
+    var overlay = document.body.createChild("div", {
+      id: "about-overlay",
+      class: "about-overlay",
+    });
+    var dialog = overlay.createChild("div", { class: "about-dialog" });
+    dialog.createChild("h2", null, "About This Implementation");
+    dialog.createChild(
+      "p",
+      null,
+      "The maze on QLike.com is a JavaScript implementation of a maze generation algorithm and A* path finding, drawn on an HTML5 canvas.",
     );
+    dialog.createChild("h3", null, "Maze generation");
+    dialog.createChild(
+      "p",
+      null,
+      "The maze is a grid of cells separated by walls, all closed at the start. " +
+        "The generator uses a randomized Prim's algorithm: pick a random cell and add its walls to a list, " +
+        "then repeatedly pick a random wall from the list. If the cells on both sides are already connected, " +
+        "the wall is discarded to avoid a loop; otherwise it is opened and the walls of the newly connected cell are added to the list. " +
+        "The result is a perfect maze with no loops and no isolated areas, so there is exactly one route between any two cells.",
+    );
+    dialog.createChild("h3", null, "Path finding (A*)");
+    dialog.createChild(
+      "p",
+      null,
+      "A* always expands the most promising node, scored as F = G + H, where G is the cost already travelled from the entrance " +
+        "and H is the straight-line distance to the exit. Discovered nodes wait in the open area; expanded nodes move to the closed area. " +
+        "When the exit is reached, the route is rebuilt by following the parent links back to the entrance. " +
+        "Turn animation on to watch the open and closed areas spread.",
+    );
+    dialog.createChild("h3", null, "Source and contact");
+    dialog.createChild(
+      "p",
+      null,
+      'GitHub: <a href="https://github.com/hui-w/maze" target="_blank">https://github.com/hui-w/maze</a><br>' +
+        'Contact: <a href="mailto:webmaster@qlike.com">webmaster@qlike.com</a>',
+    );
+    var close = function () {
+      document.removeEventListener("keydown", onKey, false);
+      document.body.removeChild(overlay);
+    };
+    var onKey = function (e) {
+      if (e.keyCode == 27) {
+        close();
+      }
+    };
+    document.addEventListener("keydown", onKey, false);
+    overlay.onclick = function (e) {
+      if (e.target == overlay) {
+        close();
+      }
+    };
+    var button = dialog.createChild("div", { class: "about-actions" });
+    var closeButton = button.createChild(
+      "span",
+      { class: "toolbar-linkbutton about-close" },
+      "Close",
+    );
+    closeButton.onclick = close;
   },
 
   newToolElement: function (parent, text, highlight, handler) {
