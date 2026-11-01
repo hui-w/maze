@@ -13,12 +13,11 @@ function Path() {
   this.exitNode = null;
   this.stepNode = null;
   this.manuallySolved = false;
-  this.path = [];
+  this.aStarPath = [];
+  this.manualPath = [];
 
   this.onUpdateUI = null;
   this.onPathComplete = null;
-
-  this.stepCounter = 0;
 }
 
 Path.prototype = {
@@ -33,21 +32,21 @@ Path.prototype = {
       //park the marker on the exit, under the exit square
       this.stepNode = this.exitNode;
 
-      //full path
-      this.path.push({
+      //full A* path
+      this.aStarPath.push({
         row: this.exitNode.row,
         col: this.exitNode.col,
       });
 
       var node = this.exitNode.prev;
       while (node !== this.entranceNode) {
-        this.path.push({
+        this.aStarPath.push({
           row: node.row,
           col: node.col,
         });
         node = node.prev;
       }
-      this.path.push({
+      this.aStarPath.push({
         row: this.entranceNode.row,
         col: this.entranceNode.col,
       });
@@ -70,8 +69,8 @@ Path.prototype = {
     this.manuallySolved = false;
     this.openArea = [];
     this.closeArea = {};
-    this.path = [];
-    this.stepCounter = 0;
+    this.aStarPath = [];
+    this.manualPath = [];
 
     if (maze != null) {
       this.maze = maze;
@@ -109,7 +108,7 @@ Path.prototype = {
       return;
     }
 
-    this.path = [];
+    this.aStarPath = [];
 
     //reset the temp variables
     this.openArea = [];
@@ -290,12 +289,15 @@ Path.prototype = {
       context.fill();
     }
 
-    //path
-    if (this.path.length > 0) {
+    //line: auto mode draws the A* route (aStarPath); manual mode, once the exit is
+    //reached, draws every cell actually walked, in the order visited,
+    //using the same line style as the auto mode
+    var line = this.manuallySolved ? this.manualPath : this.aStarPath;
+    if (line.length > 0) {
       context.beginPath();
-      for (var i = 0; i < this.path.length; i++) {
-        var row = this.path[i].row;
-        var col = this.path[i].col;
+      for (var i = 0; i < line.length; i++) {
+        var row = line[i].row;
+        var col = line[i].col;
         var x = col * cellSize + cellSize / 2;
         var y = row * cellSize + cellSize / 2;
 
@@ -367,7 +369,15 @@ Path.prototype = {
   },
 
   getPathLength: function () {
-    return this.path.length - 1;
+    return this.aStarPath.length - 1;
+  },
+
+  //manual steps are the cells walked, minus the starting entrance cell;
+  //an empty trail (no entrance yet) has no step count at all, so this
+  //returns null, not 0: 0 now unambiguously means an entrance exists
+  //and no step has been taken yet. Game.updateCounters shows N/A for null
+  getStepCount: function () {
+    return this.manualPath.length > 0 ? this.manualPath.length - 1 : null;
   },
 
   randomEntranceAndExit: function () {
@@ -394,8 +404,11 @@ Path.prototype = {
     this.manuallySolved = false;
     this.openArea = [];
     this.closeArea = {};
-    this.path = [];
-    this.stepCounter = 0;
+    this.aStarPath = [];
+    //the manual trail starts at the entrance, before the first step
+    this.manualPath = [
+      { row: this.entranceNode.row, col: this.entranceNode.col },
+    ];
     this.updateUI();
   },
 
@@ -407,9 +420,16 @@ Path.prototype = {
     var nextCol = this.stepNode.col + col;
     var nextNode = this.getNode(nextRow, nextCol);
     if (nextNode != null && this.stepNode.canGoTo(nextNode)) {
+      if (this.manualPath.length == 0) {
+        //trail was not seeded (stepNode set without setEntranceAndExit)
+        this.manualPath.push({
+          row: this.stepNode.row,
+          col: this.stepNode.col,
+        });
+      }
       this.stepNode = nextNode;
+      this.manualPath.push({ row: nextNode.row, col: nextNode.col });
       this.manuallySolved = this.isAtExit();
-      this.stepCounter++;
       this.updateUI();
       return true;
     } else {

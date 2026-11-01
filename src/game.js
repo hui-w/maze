@@ -143,7 +143,10 @@ Game.prototype = {
   },
 
   updateCounters: function () {
-    $("counter-steps").innerHTML = this.path.stepCounter;
+    //no entrance yet (Setup / Generating): getStepCount is null, and
+    //Steps is not applicable, like Path Length before an auto solve
+    var stepCount = this.path.getStepCount();
+    $("counter-steps").innerHTML = stepCount == null ? "N/A" : stepCount;
     this.pathLengthElement.innerHTML = this.autoPath
       ? this.path.getPathLength()
       : "N/A";

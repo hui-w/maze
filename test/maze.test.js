@@ -87,8 +87,8 @@ sizes.forEach(function (size) {
     assert.strictEqual(p.stepNode, p.exitNode, "marker should finish at the exit");
     assert.strictEqual(p.manuallySolved, false, "A* should not count as a manual solve");
 
-    //the route is stored from exit to entrance
-    const route = p.path;
+    //the A* route is stored from exit to entrance
+    const route = p.aStarPath;
     assert.deepStrictEqual(
       { row: route[0].row, col: route[0].col },
       { row: p.exitNode.row, col: p.exitNode.col },
@@ -121,7 +121,106 @@ sizes.forEach(function (size) {
       );
     }
     assert.strictEqual(p.manuallySolved, true, "manual arrival should mark the maze solved");
+
+    //manual exit line: every cell walked, entrance first and exit last,
+    //in the order visited (the reverse of the A* route here)
+    //compare row/col literals, not the vm-context objects themselves
+    assert.strictEqual(p.manualPath.length, route.length);
+    assert.deepStrictEqual(
+      { row: p.manualPath[0].row, col: p.manualPath[0].col },
+      { row: p.entranceNode.row, col: p.entranceNode.col },
+    );
+    assert.deepStrictEqual(
+      {
+        row: p.manualPath[p.manualPath.length - 1].row,
+        col: p.manualPath[p.manualPath.length - 1].col,
+      },
+      { row: p.exitNode.row, col: p.exitNode.col },
+    );
+    for (let i = 0; i < route.length; i++) {
+      assert.deepStrictEqual(
+        { row: p.manualPath[i].row, col: p.manualPath[i].col },
+        {
+          row: route[route.length - 1 - i].row,
+          col: route[route.length - 1 - i].col,
+        },
+      );
+    }
   });
+});
+
+test("manual path includes every visited cell, including backtracks", function () {
+  const maze = generate(8, 8);
+  const p = new ctx.Path();
+  p.init(maze);
+  p.getPath();
+  const route = p.aStarPath;
+  //walked order: entrance first, exit last
+  const walked = route.slice().reverse();
+  p.setEntranceAndExit(
+    p.entranceNode.row,
+    p.entranceNode.col,
+    p.exitNode.row,
+    p.exitNode.col,
+  );
+  //one step forward, back to the entrance, forward again, then on to the exit
+  const steps = [walked[1], walked[0], walked[1]].concat(walked.slice(2));
+  steps.forEach(function (target) {
+    assert.ok(
+      p.moveStep(target.row - p.stepNode.row, target.col - p.stepNode.col),
+      "manual step to " + target.row + "," + target.col + " should succeed",
+    );
+  });
+  assert.strictEqual(p.manuallySolved, true, "manual arrival should mark the maze solved");
+  const expected = [walked[0], walked[1], walked[0]].concat(walked.slice(1));
+  //compare row/col literals, not the vm-context arrays/objects themselves
+  assert.strictEqual(p.manualPath.length, expected.length);
+  expected.forEach(function (cell, i) {
+    assert.deepStrictEqual(
+      { row: p.manualPath[i].row, col: p.manualPath[i].col },
+      { row: cell.row, col: cell.col },
+    );
+  });
+});
+
+test("step count is derived from the manual path", function () {
+  const p = new ctx.Path();
+  p.init();
+  //no entrance yet: step count is null, not 0; Game.updateCounters
+  //shows N/A for null, like Path Length before an auto solve
+  assert.strictEqual(p.getStepCount(), null, "empty trail is null, not 0");
+  assert.strictEqual(p.entranceNode, null);
+
+  const maze = generate(8, 8);
+  p.init(maze);
+  p.getPath();
+  const route = p.aStarPath;
+  const walked = route.slice().reverse();
+  p.setEntranceAndExit(
+    p.entranceNode.row,
+    p.entranceNode.col,
+    p.exitNode.row,
+    p.exitNode.col,
+  );
+  assert.strictEqual(p.getStepCount(), 0);
+
+  for (let i = 1; i <= 2; i++) {
+    const target = walked[i];
+    assert.ok(p.moveStep(target.row - p.stepNode.row, target.col - p.stepNode.col));
+  }
+  assert.strictEqual(p.getStepCount(), 2);
+
+  for (let i = 3; i < walked.length; i++) {
+    const target = walked[i];
+    assert.ok(p.moveStep(target.row - p.stepNode.row, target.col - p.stepNode.col));
+  }
+  assert.strictEqual(p.manuallySolved, true);
+  assert.strictEqual(p.getStepCount(), walked.length - 1);
+
+  //Show Path afterwards keeps the manual step count: getPath no longer clears the trail
+  p.getPath();
+  assert.strictEqual(p.manuallySolved, false);
+  assert.strictEqual(p.getStepCount(), walked.length - 1);
 });
 
 test("entrance is on the left edge and exit on the right edge", function () {
