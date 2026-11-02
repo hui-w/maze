@@ -151,9 +151,7 @@ AStar.prototype = {
     this._cameFrom = new Map();
     this._gScore = new Map();
     this._fScore = new Map();
-    this._openKeys = new Map([
-      [this.getKey(this.startNode), this.startNode],
-    ]);
+    this._openKeys = new Map([[this.getKey(this.startNode), this.startNode]]);
     this._closedKeys = new Set();
     this._gScore.set(this.getKey(this.startNode), 0);
     this._fScore.set(
@@ -161,8 +159,7 @@ AStar.prototype = {
       this.getHeuristic(this.startNode, this.goalNode),
     );
     this._started = true;
-    this._finished =
-      this.getKey(this.startNode) === this.getKey(this.goalNode);
+    this._finished = this.getKey(this.startNode) === this.getKey(this.goalNode);
     this._found = this._finished;
   },
 
@@ -203,7 +200,8 @@ AStar.prototype = {
    * heuristic estimate from the neighbour to the goal, F = G + H.
    * The scores are kept in this object's maps, not on the nodes. */
   getF: function (prvNode, crtNode) {
-    var g = this._gScore.get(this.getKey(prvNode)) + this.getCost(prvNode, crtNode);
+    var g =
+      this._gScore.get(this.getKey(prvNode)) + this.getCost(prvNode, crtNode);
     var h = this.getHeuristic(crtNode, this.goalNode);
     return {
       F: h + g,

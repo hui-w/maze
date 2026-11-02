@@ -290,4 +290,19 @@ Cell.prototype = {
   setConnected: function (connected) {
     this.connected = connected;
   },
+
+  canGoTo: function (node) {
+    //check if the specified node is on the other side of an open wall
+    for (var i = 0; i < this.walls.length; i++) {
+      var wall = this.walls[i];
+      if (!wall.isOpen) {
+        continue;
+      }
+      var other = wall.getOtherCell(this);
+      if (other != null && other.row == node.row && other.col == node.col) {
+        return true;
+      }
+    }
+    return false;
+  },
 };

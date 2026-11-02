@@ -45,14 +45,14 @@ src/
   config.js   Sizes, colours and animation delays
   maze.js     Maze, Cell and Wall: grid model, generation and drawing
   astar.js    AStar: reusable A* search, no maze or drawing knowledge
-  path.js     Path and AStarNode: player movement and drawing
+  path.js     Path: maze-to-AStar adapter, player movement and drawing
   game.js     Game: toolbar, state machine, keyboard input and canvas
   web.css     Toolbar styles
 release/      Minified build served on GitHub Pages
 ```
 
 - **Maze** only knows the grid. It reports progress through the callbacks `onUpdateUI` and `onInitComplete`.
-- **Path** builds its node graph from the maze's open walls, and reports through `onUpdateUI` and `onPathComplete`.
+- **Path** runs A* directly on the maze cells (neighbours are the cells on the other side of an open wall), and reports through `onUpdateUI` and `onPathComplete`.
 - **Game** owns both. It wires up the callbacks, draws the background, maze and path to the canvas, and drives everything through a small state machine: `Setup` → `Generating` → `Playing` → `Solving` → `Finished`. The toolbar buttons are enabled or disabled according to the current state.
 - **Config** holds all the tunable values, so sizes, colours and delays are changed in one place.
 

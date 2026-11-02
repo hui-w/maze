@@ -6,7 +6,6 @@
 function Path() {
   this.maze = null;
 
-  this.cache = {};
   this.entranceNode = null;
   this.exitNode = null;
   this.stepNode = null;
@@ -44,7 +43,7 @@ Path.prototype = {
 
   /* initialize without maze object  will only cleat the contents and refresh the UI*/
   init: function (maze) {
-    this.cache = {};
+    this.maze = maze;
     this.entranceNode = null;
     this.exitNode = null;
     this.stepNode = null;
@@ -54,26 +53,6 @@ Path.prototype = {
     this.astar = null;
 
     if (maze != null) {
-      this.maze = maze;
-      //prepare the nodes cache
-      var cells = maze.cells;
-      for (var i = 0; i < cells.length; i++) {
-        var cell = cells[i];
-        var node = new AStarNode(cell.row, cell.col);
-
-        for (var j = 0; j < cell.walls.length; j++) {
-          var wall = cell.walls[j];
-          if (wall.isOpen) {
-            var otherCell = wall.getOtherCell(cell);
-            node.neighbors.push({
-              row: otherCell.row,
-              col: otherCell.col,
-            });
-          }
-        }
-        this.cache[node.id] = node;
-      }
-
       //get a randomized entrance and exit
       this.randomEntranceAndExit();
     } else {
@@ -98,11 +77,13 @@ Path.prototype = {
       this.entranceNode,
       this.exitNode,
       function (node) {
+        //neighbours are the cells on the other side of an open wall
         var neighbors = [];
-        for (var i = 0; i < node.neighbors.length; i++) {
-          neighbors.push(
-            that.getNode(node.neighbors[i].row, node.neighbors[i].col),
-          );
+        for (var i = 0; i < node.walls.length; i++) {
+          var wall = node.walls[i];
+          if (wall.isOpen) {
+            neighbors.push(wall.getOtherCell(node));
+          }
         }
         return neighbors;
       },
@@ -119,7 +100,7 @@ Path.prototype = {
           );
         },
         getKey: function (node) {
-          return node.id;
+          return "row_" + node.row + "_col_" + node.col;
         },
       },
     );
@@ -160,7 +141,17 @@ Path.prototype = {
   },
 
   getNode: function (row, col) {
-    return this.cache["row_" + row + "_col_" + col];
+    //cells are stored row by row, so the index is row * cols + col
+    if (
+      this.maze == null ||
+      row < 0 ||
+      col < 0 ||
+      row >= this.maze.rows ||
+      col >= this.maze.cols
+    ) {
+      return null;
+    }
+    return this.maze.cells[row * this.maze.cols + col];
   },
 
   /* Begin: public methods */
@@ -377,27 +368,4 @@ Path.prototype = {
       return false;
     }
   }, //end of moveStep
-};
-
-function AStarNode(row, col) {
-  this.row = row;
-  this.col = col;
-  this.id = "row_" + row + "_col_" + col;
-  //the neighbour nodes which can be accessed, item example {row: 10, col: 12}
-  this.neighbors = [];
-}
-
-AStarNode.prototype = {
-  canGoTo: function (node) {
-    //check if the specified node is in the neighbours list
-    for (var i = 0; i < this.neighbors.length; i++) {
-      if (
-        this.neighbors[i].row == node.row &&
-        this.neighbors[i].col == node.col
-      ) {
-        return true;
-      }
-    }
-    return false;
-  },
 };
