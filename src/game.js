@@ -11,38 +11,38 @@ const GameState = {
   Finished: "Maze solved",
 };
 
-function Game() {
-  const size = Config.MazeSize[Config.Game.defaultSize];
-  this.maze = new Maze(size, size);
-  this.path = new Path();
-  this.state = GameState.Setup;
-  this.settingControls = [];
-  this.animationDelayButtons = {};
-  this.sizeButtons = {};
-  this.statusElement = null;
-  this.pathButton = null;
-  this.generateButton = null;
-  this.randomButton = null;
-  this.autoPath = false;
-  this.playPart = null;
+class Game {
+  constructor() {
+    const size = Config.MazeSize[Config.Game.defaultSize];
+    this.maze = new Maze(size, size);
+    this.path = new Path();
+    this.state = GameState.Setup;
+    this.settingControls = [];
+    this.animationDelayButtons = {};
+    this.sizeButtons = {};
+    this.statusElement = null;
+    this.pathButton = null;
+    this.generateButton = null;
+    this.randomButton = null;
+    this.autoPath = false;
+    this.playPart = null;
 
-  this.width = 0;
-  this.height = 0;
-  this.cellSize = 0;
+    this.width = 0;
+    this.height = 0;
+    this.cellSize = 0;
 
-  this.canvas = null;
-  this.context = null;
+    this.canvas = null;
+    this.context = null;
 
-  //from 0000 to 1111 (Keys: left-up-right-bottom)
-  this.arrowKeyStatus = 0;
-  this.keyboardTimer = null;
+    //from 0000 to 1111 (Keys: left-up-right-bottom)
+    this.arrowKeyStatus = 0;
+    this.keyboardTimer = null;
 
-  //initialize
-  this.init();
-}
+    //initialize
+    this.init();
+  }
 
-Game.prototype = {
-  init: function () {
+  init() {
     const that = this;
     this.width = document.documentElement.clientWidth;
     this.height = document.documentElement.clientHeight;
@@ -61,17 +61,17 @@ Game.prototype = {
     this.render();
 
     //maze and path events
-    function updateUI() {
+    const updateUI = () => {
       that.redraw();
-    }
-    this.maze.onUpdateUI = function () {
+    };
+    this.maze.onUpdateUI = () => {
       updateUI();
       that.updateProgress();
     };
     this.path.onUpdateUI = updateUI;
 
     //initialize the maze; when it's done, initialize the path
-    this.maze.onInitComplete = function () {
+    this.maze.onInitComplete = () => {
       that.path.init(that.maze);
       that.updateCounters();
       that.playPart.style.display = "";
@@ -79,31 +79,31 @@ Game.prototype = {
     };
     this.prepareMaze();
 
-    this.path.onPathComplete = function () {
+    this.path.onPathComplete = () => {
       that.autoPath = true;
       that.updateCounters();
       that.setState(GameState.Finished);
     };
-  },
+  }
 
-  setState: function (state) {
+  setState(state) {
     this.state = state;
     //drop any held arrow keys so they cannot resume movement in the next round
     this.stopMoving();
     this.updateToolbar();
-  },
+  }
 
-  updateToolbar: function () {
+  updateToolbar() {
     const s = this.state;
     this.statusElement.innerHTML = s + "<span></span>";
     this.updateProgress();
-    function setEnabled(element, enabled) {
+    const setEnabled = (element, enabled) => {
       if (enabled) {
         element.removeClassName("disabled");
       } else {
         element.addClassName("disabled");
       }
-    }
+    };
     for (let i = 0; i < this.settingControls.length; i++) {
       //only locked while an animation is running
       setEnabled(
@@ -120,10 +120,10 @@ Game.prototype = {
       s == GameState.Playing || s == GameState.Finished,
     );
     setEnabled(this.pathButton, s == GameState.Playing);
-  },
+  }
 
   /* show the generation percentage next to the status text */
-  updateProgress: function () {
+  updateProgress() {
     const element = this.statusElement.lastChild;
     if (!element) {
       return;
@@ -132,17 +132,17 @@ Game.prototype = {
       this.state == GameState.Generating
         ? " " + Math.floor(this.maze.getProgress() * 100) + "%"
         : "";
-  },
+  }
 
   /* pick a new entrance and exit; the player goes back to the entrance */
-  randomizeEntranceAndExit: function () {
+  randomizeEntranceAndExit() {
     this.autoPath = false;
     this.path.randomEntranceAndExit();
     this.updateCounters();
     this.setState(GameState.Playing);
-  },
+  }
 
-  updateCounters: function () {
+  updateCounters() {
     //no entrance yet (Setup / Generating): getStepCount is null, and
     //Steps is not applicable, like Path Length before an auto solve
     const stepCount = this.path.getStepCount();
@@ -150,9 +150,9 @@ Game.prototype = {
     this.pathLengthElement.innerHTML = this.autoPath
       ? this.path.getPathLength()
       : "N/A";
-  },
+  }
 
-  render: function () {
+  render() {
     const that = this;
 
     //create the wrapper
@@ -175,7 +175,7 @@ Game.prototype = {
     this.resizeCanvas();
 
     //check if the window size is changed
-    function checkWindowsize() {
+    const checkWindowsize = () => {
       const nwidth = document.documentElement.clientWidth;
       const nheight = document.documentElement.clientHeight;
       if (nwidth != that.width || nheight != that.height) {
@@ -183,14 +183,14 @@ Game.prototype = {
         that.height = nheight;
         that.resizeCanvas();
       }
-    }
+    };
     setInterval(checkWindowsize, 200);
 
     //render the toolbar
     this.renderToolbar(rootElement);
 
     //keyboard events
-    this.handleKeyEvent = function (e) {
+    this.handleKeyEvent = (e) => {
       switch (e.type) {
         case "keydown":
           that.keyDown(e);
@@ -202,9 +202,9 @@ Game.prototype = {
     };
     document.addEventListener("keydown", this.handleKeyEvent, false);
     document.addEventListener("keyup", this.handleKeyEvent, false);
-  },
+  }
 
-  renderToolbar: function (parent) {
+  renderToolbar(parent) {
     const that = this;
 
     //tool bar container
@@ -244,11 +244,9 @@ Game.prototype = {
         line,
         animationDelays[i],
         false,
-        (function (animationDelay) {
-          return function () {
-            that.setAnimationDelay(animationDelay);
-            that.saveSetting("animationDelay", animationDelay);
-          };
+        ((animationDelay) => () => {
+          that.setAnimationDelay(animationDelay);
+          that.saveSetting("animationDelay", animationDelay);
         })(animationDelays[i]),
       );
       this.animationDelayButtons[animationDelays[i]].addClassName("option");
@@ -267,11 +265,9 @@ Game.prototype = {
         line,
         sizes[i],
         false,
-        (function (size) {
-          return function () {
-            that.resizeMaze(size);
-            that.saveSetting("size", size);
-          };
+        ((size) => () => {
+          that.resizeMaze(size);
+          that.saveSetting("size", size);
         })(sizes[i]),
       );
       this.sizeButtons[sizes[i]].addClassName("option");
@@ -286,7 +282,7 @@ Game.prototype = {
       line,
       "Generate Maze",
       false,
-      function (e, obj) {
+      (e, obj) => {
         that.resetMaze();
       },
     );
@@ -295,7 +291,7 @@ Game.prototype = {
       line,
       "New Entrance & Exit",
       false,
-      function (e, obj) {
+      (e, obj) => {
         that.randomizeEntranceAndExit();
       },
     );
@@ -320,7 +316,7 @@ Game.prototype = {
     //by hand
     this.newToolElement(
       this.newToolElement(part, "|", false, null),
-      "&nbsp;&nbsp;Manual - use arrow keys or drag",
+      "&nbsp;&nbsp;Manual - use arrow keys or swipe",
       false,
       null,
     );
@@ -342,7 +338,7 @@ Game.prototype = {
       line,
       "Show Path",
       false,
-      function (e, obj) {
+      (e, obj) => {
         that.getPath();
       },
     );
@@ -366,13 +362,13 @@ Game.prototype = {
       class: "toolbar-footer",
     });
     footer.createChild("span", null, "Copyright \u00A9 QLike.com");
-    this.newToolElement(footer, "About", false, function () {
+    this.newToolElement(footer, "About", false, () => {
       that.showAbout();
     });
-  },
+  }
 
   /* modal dialog describing the game */
-  showAbout: function () {
+  showAbout() {
     if ($("about-overlay")) {
       return;
     }
@@ -413,17 +409,17 @@ Game.prototype = {
       'GitHub: <a href="https://github.com/hui-w/maze" target="_blank">https://github.com/hui-w/maze</a><br>' +
         'Feedback: <a href="mailto:webmaster@qlike.com">webmaster@qlike.com</a>',
     );
-    const close = function () {
+    const close = () => {
       document.removeEventListener("keydown", onKey, false);
       document.body.removeChild(overlay);
     };
-    const onKey = function (e) {
+    const onKey = (e) => {
       if (e.keyCode == 27) {
         close();
       }
     };
     document.addEventListener("keydown", onKey, false);
-    overlay.onclick = function (e) {
+    overlay.onclick = (e) => {
       if (e.target == overlay) {
         close();
       }
@@ -435,9 +431,9 @@ Game.prototype = {
       "Close",
     );
     closeButton.onclick = close;
-  },
+  }
 
-  newToolElement: function (parent, text, highlight, handler) {
+  newToolElement(parent, text, highlight, handler) {
     let element = null;
     if (text == "|") {
       //new line
@@ -478,10 +474,10 @@ Game.prototype = {
       element.addClassName("highlighted");
     }
     return element;
-  },
+  }
 
   /* localStorage may be unavailable (private mode); fall back to the default */
-  loadSetting: function (key, allowed, fallback) {
+  loadSetting(key, allowed, fallback) {
     try {
       const value = localStorage.getItem("maze." + key);
       if (value && allowed.hasOwnProperty(value)) {
@@ -489,16 +485,16 @@ Game.prototype = {
       }
     } catch (e) {}
     return fallback;
-  },
+  }
 
-  saveSetting: function (key, value) {
+  saveSetting(key, value) {
     try {
       localStorage.setItem("maze." + key, value);
     } catch (e) {}
-  },
+  }
 
   /* the chosen option is highlighted and no longer clickable */
-  markSelected: function (buttons, value) {
+  markSelected(buttons, value) {
     for (let key in buttons) {
       if (key == value) {
         buttons[key].addClassName("selected");
@@ -506,36 +502,36 @@ Game.prototype = {
         buttons[key].removeClassName("selected");
       }
     }
-  },
+  }
 
   /* A zero delay skips animation; other options use their configured delays */
-  setAnimationDelay: function (animationDelay) {
+  setAnimationDelay(animationDelay) {
     Config.Maze.stepDelay =
       Config.AnimationDelay.MazeGeneration[animationDelay];
     Config.Path.stepDelay = Config.AnimationDelay.PathFinding[animationDelay];
     this.markSelected(this.animationDelayButtons, animationDelay);
-  },
+  }
 
-  resizeMaze: function (size) {
+  resizeMaze(size) {
     const n = Config.MazeSize[size];
     this.maze.resize(n, n);
     this.markSelected(this.sizeButtons, size);
     this.resizeCanvas();
     this.prepareMaze();
-  },
+  }
 
   /* show an empty maze (all walls closed) and wait for Generate Maze */
-  prepareMaze: function () {
+  prepareMaze() {
     this.autoPath = false;
     this.path.init();
     this.maze.prepare();
     this.updateCounters();
     this.setState(GameState.Setup);
     this.redraw();
-  },
+  }
 
   /* keyboard events: key down */
-  keyDown: function (e) {
+  keyDown(e) {
     if (this.state != GameState.Playing) {
       return;
     }
@@ -555,15 +551,15 @@ Game.prototype = {
         break;
     }
     this.startMoving();
-  },
+  }
 
   /* move the player in the held directions, and repeat until all directions are released */
-  startMoving: function () {
+  startMoving() {
     const that = this;
     if (this.arrowKeyStatus == 0 || this.keyboardTimer != null) {
       return;
     }
-    function keyboardTimerHandler() {
+    const keyboardTimerHandler = () => {
       let dRow = 0;
       let dCol = 0;
       if ((that.arrowKeyStatus & 1) > 0) {
@@ -597,19 +593,19 @@ Game.prototype = {
       } else {
         that.keyboardTimer = null;
       }
-    }
+    };
     keyboardTimerHandler();
-  },
+  }
 
   /* touch and mouse: press anywhere on the maze and drag; the player moves in the drag direction while held */
-  bindPointer: function () {
+  bindPointer() {
     const that = this;
     const canvas = this.canvas;
     let activePointer = null;
     let startX = 0;
     let startY = 0;
 
-    function update(e) {
+    const update = (e) => {
       if (that.state != GameState.Playing) {
         that.stopMoving();
         return;
@@ -642,16 +638,16 @@ Game.prototype = {
         that.arrowKeyStatus = dy < 0 ? 1 << 1 : 1 << 3;
       }
       that.startMoving();
-    }
+    };
 
-    function release(e) {
+    const release = (e) => {
       if (activePointer == e.pointerId) {
         activePointer = null;
         that.stopMoving();
       }
-    }
+    };
 
-    canvas.addEventListener("pointerdown", function (e) {
+    canvas.addEventListener("pointerdown", (e) => {
       if (that.state != GameState.Playing || activePointer != null) {
         return;
       }
@@ -660,25 +656,25 @@ Game.prototype = {
       startY = e.clientY;
       canvas.setPointerCapture(e.pointerId);
     });
-    canvas.addEventListener("pointermove", function (e) {
+    canvas.addEventListener("pointermove", (e) => {
       if (activePointer == e.pointerId) {
         update(e);
       }
     });
     canvas.addEventListener("pointerup", release);
     canvas.addEventListener("pointercancel", release);
-  },
+  }
 
-  stopMoving: function () {
+  stopMoving() {
     this.arrowKeyStatus = 0;
     if (this.keyboardTimer != null) {
       clearTimeout(this.keyboardTimer);
       this.keyboardTimer = null;
     }
-  },
+  }
 
   /* keyboard events: key up */
-  keyUp: function (e) {
+  keyUp(e) {
     const keyCode = e.keyCode;
     switch (keyCode) {
       case 37:
@@ -700,9 +696,9 @@ Game.prototype = {
         this.keyboardTimer = null;
       }
     }
-  },
+  }
 
-  resizeCanvas: function () {
+  resizeCanvas() {
     const wrapperWidth = this.width - Config.Game.padding * 2;
     const wrapperHeight = this.height - Config.Game.padding * 2;
     //fractional cell size so the board always fills the available space
@@ -724,9 +720,9 @@ Game.prototype = {
     this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
 
     this.redraw();
-  },
+  }
 
-  redraw: function () {
+  redraw() {
     //draw the background
     this.context.save();
     this.context.fillStyle = Config.Game.backgroundColor;
@@ -736,25 +732,25 @@ Game.prototype = {
     //draw the maze and path
     this.maze.redraw(this.context, this.cellSize);
     this.path.redraw(this.context, this.cellSize);
-  },
+  }
 
-  resetMaze: function () {
+  resetMaze() {
     this.autoPath = false;
     this.setState(GameState.Generating);
     this.path.init(); //initialize without maze will clear current path content immediately
     this.maze.init(); //the path will be initialized when the maze initComplete
     this.updateCounters();
-  },
+  }
 
-  getPath: function () {
+  getPath() {
     if (this.state != GameState.Playing) {
       return;
     }
     this.setState(GameState.Solving);
     this.path.getPath();
-  },
+  }
 
-  moveStep: function (dRow, dCol) {
+  moveStep(dRow, dCol) {
     if (this.state != GameState.Playing) {
       return;
     }
@@ -763,10 +759,10 @@ Game.prototype = {
     if (this.path.isAtExit()) {
       this.setState(GameState.Finished);
     }
-  },
-};
+  }
+}
 
 let game = null;
-addEventListener("load", function () {
+addEventListener("load", () => {
   game = new Game();
 });

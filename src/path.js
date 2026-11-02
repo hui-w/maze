@@ -3,29 +3,29 @@
  * @repo https://github.com/hui-w/maze
  * @licence MIT
  */
-function Path() {
-  this.maze = null;
+class Path {
+  constructor() {
+    this.maze = null;
 
-  this.entranceNode = null;
-  this.exitNode = null;
-  this.stepNode = null;
-  this.manuallySolved = false;
-  this.aStarPath = [];
-  this.manualPath = [];
-  this.astar = null;
+    this.entranceNode = null;
+    this.exitNode = null;
+    this.stepNode = null;
+    this.manuallySolved = false;
+    this.aStarPath = [];
+    this.manualPath = [];
+    this.astar = null;
 
-  this.onUpdateUI = null;
-  this.onPathComplete = null;
-}
+    this.onUpdateUI = null;
+    this.onPathComplete = null;
+  }
 
-Path.prototype = {
-  updateUI: function () {
+  updateUI() {
     if (typeof this.onUpdateUI == "function") {
       this.onUpdateUI();
     }
-  },
+  }
 
-  pathComplete: function () {
+  pathComplete() {
     if (this.astar != null && this.astar.isFound()) {
       //park the marker on the exit, under the exit square
       this.stepNode = this.exitNode;
@@ -39,10 +39,10 @@ Path.prototype = {
     if (typeof this.onPathComplete == "function") {
       this.onPathComplete();
     }
-  },
+  }
 
   /* initialize without maze object  will only cleat the contents and refresh the UI*/
-  init: function (maze) {
+  init(maze) {
     this.maze = maze;
     this.entranceNode = null;
     this.exitNode = null;
@@ -59,9 +59,9 @@ Path.prototype = {
       //update the UI when resetting
       this.updateUI();
     }
-  },
+  }
 
-  getPath: function () {
+  getPath() {
     this.manuallySolved = false;
     const that = this;
     if (this.entranceNode == null || this.exitNode == null) {
@@ -76,7 +76,7 @@ Path.prototype = {
     this.astar = new AStar(
       this.entranceNode,
       this.exitNode,
-      function (node) {
+      (node) => {
         //neighbours are the cells on the other side of an open wall
         const neighbors = [];
         for (let i = 0; i < node.walls.length; i++) {
@@ -88,10 +88,8 @@ Path.prototype = {
         return neighbors;
       },
       {
-        getCost: function () {
-          return 10;
-        },
-        getHeuristic: function (node, goal) {
+        getCost: () => 10,
+        getHeuristic: (node, goal) => {
           return Math.round(
             Math.sqrt(
               Math.pow((goal.col - node.col) * 10, 2) +
@@ -99,7 +97,7 @@ Path.prototype = {
             ),
           );
         },
-        getKey: function (node) {
+        getKey: (node) => {
           return "row_" + node.row + "_col_" + node.col;
         },
       },
@@ -121,7 +119,7 @@ Path.prototype = {
       this.pathComplete();
     } else {
       //run step by step
-      function runStep() {
+      const runStep = () => {
         if (Config.Path.stepDelay > 0) {
           //path step may be turned off any time during the timer
           if (!that.astar.isFound()) {
@@ -135,12 +133,12 @@ Path.prototype = {
             that.pathComplete();
           }
         }
-      }
+      };
       runStep();
     }
-  },
+  }
 
-  getNode: function (row, col) {
+  getNode(row, col) {
     //cells are stored row by row, so the index is row * cols + col
     if (
       this.maze == null ||
@@ -152,10 +150,10 @@ Path.prototype = {
       return null;
     }
     return this.maze.cells[row * this.maze.cols + col];
-  },
+  }
 
   /* Begin: public methods */
-  redraw: function (context, cellSize) {
+  redraw(context, cellSize) {
     if (
       this.entranceNode == null ||
       this.exitNode == null ||
@@ -164,7 +162,7 @@ Path.prototype = {
       return;
     }
 
-    function drawArrow(context, cell, cellSize, withPadding) {
+    const drawArrow = (context, cell, cellSize, withPadding) => {
       const padding = withPadding ? cellSize * 0.1 : 0;
       context.moveTo(
         cell.col * cellSize + padding,
@@ -178,9 +176,9 @@ Path.prototype = {
         cell.col * cellSize + padding,
         cell.row * cellSize + cellSize - padding,
       );
-    }
+    };
 
-    function drawRectangle(context, cell, cellSize, withPadding) {
+    const drawRectangle = (context, cell, cellSize, withPadding) => {
       const padding = withPadding ? cellSize * 0.1 : 0;
       context.rect(
         cell.col * cellSize + padding,
@@ -188,9 +186,9 @@ Path.prototype = {
         cellSize - 2 * padding,
         cellSize - 2 * padding,
       );
-    }
+    };
 
-    function drawEllipse(context, cell, cellSize, withPadding) {
+    const drawEllipse = (context, cell, cellSize, withPadding) => {
       const padding = withPadding ? cellSize * 0.1 : 0;
       context.arc(
         cell.col * cellSize + cellSize / 2,
@@ -200,7 +198,7 @@ Path.prototype = {
         Math.PI * 2,
         false,
       );
-    }
+    };
 
     context.save();
 
@@ -286,34 +284,34 @@ Path.prototype = {
     }
 
     context.restore();
-  },
+  }
 
-  isAtExit: function () {
+  isAtExit() {
     return (
       this.stepNode != null &&
       this.exitNode != null &&
       this.stepNode.row == this.exitNode.row &&
       this.stepNode.col == this.exitNode.col
     );
-  },
+  }
 
-  pathFound: function () {
+  pathFound() {
     return this.astar != null && this.astar.isFound();
-  },
+  }
 
-  getPathLength: function () {
+  getPathLength() {
     return this.aStarPath.length - 1;
-  },
+  }
 
   //manual steps are the cells walked, minus the starting entrance cell;
   //an empty trail (no entrance yet) has no step count at all, so this
   //returns null, not 0: 0 now unambiguously means an entrance exists
   //and no step has been taken yet. Game.updateCounters shows N/A for null
-  getStepCount: function () {
+  getStepCount() {
     return this.manualPath.length > 0 ? this.manualPath.length - 1 : null;
-  },
+  }
 
-  randomEntranceAndExit: function () {
+  randomEntranceAndExit() {
     if (this.maze == null) {
       return;
     }
@@ -328,9 +326,9 @@ Path.prototype = {
 
     //update the UI
     this.updateUI();
-  },
+  }
 
-  setEntranceAndExit: function (row1, col1, row2, col2) {
+  setEntranceAndExit(row1, col1, row2, col2) {
     this.entranceNode = this.getNode(row1, col1);
     this.exitNode = this.getNode(row2, col2);
     this.stepNode = this.getNode(row1, col1);
@@ -342,9 +340,9 @@ Path.prototype = {
       { row: this.entranceNode.row, col: this.entranceNode.col },
     ];
     this.updateUI();
-  },
+  }
 
-  moveStep: function (row, col) {
+  moveStep(row, col) {
     if (this.stepNode == null) {
       return false;
     }
@@ -367,5 +365,5 @@ Path.prototype = {
     } else {
       return false;
     }
-  }, //end of moveStep
-};
+  } //end of moveStep
+}

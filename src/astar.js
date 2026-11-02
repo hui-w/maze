@@ -76,9 +76,7 @@
  *     C: [],
  *     D: ["C"],
  *   };
- *   const astar = new AStar("A", "C", function (node) {
- *     return graph[node];
- *   });
+ *   const astar = new AStar("A", "C", (node) => graph[node]);
  *   let route = astar.findPath();
  *   // route: ["A", "B", "C"]  (or ["A", "D", "C"] - both cost 2)
  *   // route is null when no route exists, e.g. start "C", goal "A".
@@ -94,58 +92,52 @@
  *     route = astar.getRoute();
  *   }
  */
-function AStar(start, goal, getNeighbors, options) {
-  if (start === undefined) {
-    throw new Error("AStar: start is required");
-  }
-  if (goal === undefined) {
-    throw new Error("AStar: goal is required");
-  }
-  if (typeof getNeighbors !== "function") {
-    throw new Error("AStar: getNeighbors must be a function");
-  }
-  options = options || {};
+class AStar {
+  constructor(start, goal, getNeighbors, options) {
+    if (start === undefined) {
+      throw new Error("AStar: start is required");
+    }
+    if (goal === undefined) {
+      throw new Error("AStar: goal is required");
+    }
+    if (typeof getNeighbors !== "function") {
+      throw new Error("AStar: getNeighbors must be a function");
+    }
+    options = options || {};
 
-  this.startNode = start;
-  this.goalNode = goal;
-  this.getNeighbors = getNeighbors;
-  this.getCost =
-    typeof options.getCost === "function"
-      ? options.getCost
-      : function () {
-          return 1;
-        };
-  this.getHeuristic =
-    typeof options.getHeuristic === "function"
-      ? options.getHeuristic
-      : function () {
-          return 0;
-        };
-  this.getKey =
-    typeof options.getKey === "function"
-      ? options.getKey
-      : function (node) {
-          return node;
-        };
+    this.startNode = start;
+    this.goalNode = goal;
+    this.getNeighbors = getNeighbors;
+    this.getCost =
+      typeof options.getCost === "function"
+        ? options.getCost
+        : () => 1;
+    this.getHeuristic =
+      typeof options.getHeuristic === "function"
+        ? options.getHeuristic
+        : () => 0;
+    this.getKey =
+      typeof options.getKey === "function"
+        ? options.getKey
+        : (node) => node;
 
-  //discovered but not yet expanded (candidates for the next step)
-  this.openArea = [];
-  //already expanded (done, never expanded again)
-  this.closeArea = [];
-  this._cameFrom = new Map();
-  this._gScore = new Map();
-  this._fScore = new Map();
-  //key -> open node, so inOpenArea can find a node by its key at once
-  this._openKeys = new Map();
-  this._closedKeys = new Set();
-  this._started = false;
-  this._finished = false;
-  this._found = false;
-}
+    //discovered but not yet expanded (candidates for the next step)
+    this.openArea = [];
+    //already expanded (done, never expanded again)
+    this.closeArea = [];
+    this._cameFrom = new Map();
+    this._gScore = new Map();
+    this._fScore = new Map();
+    //key -> open node, so inOpenArea can find a node by its key at once
+    this._openKeys = new Map();
+    this._closedKeys = new Set();
+    this._started = false;
+    this._finished = false;
+    this._found = false;
+  }
 
-AStar.prototype = {
   /* reset and put the start node in the open list */
-  init: function () {
+  init() {
     this.openArea = [this.startNode];
     this.closeArea = [];
     this._cameFrom = new Map();
@@ -162,13 +154,13 @@ AStar.prototype = {
     this._started = true;
     this._finished = this.getKey(this.startNode) === this.getKey(this.goalNode);
     this._found = this._finished;
-  },
+  }
 
   /* One search step, in the old familiar shape: get the open node
    * with the smallest F, check if it is the goal, otherwise put
    * its neighbours into the open area. Returns that node, or
    * null when the search is finished (goal found, or open empty). */
-  step: function () {
+  step() {
     if (!this._started) {
       this.init();
     }
@@ -194,13 +186,13 @@ AStar.prototype = {
     //3. otherwise, expand it: put its neighbours into the open list
     this.neighboursIntoOpenArea(current);
     return current;
-  },
+  }
 
   /* F, H and G for going from one node to a neighbour through it:
    * G is the route so far plus this step's cost, H is the
    * heuristic estimate from the neighbour to the goal, F = G + H.
    * The scores are kept in this object's maps, not on the nodes. */
-  getF: function (prvNode, crtNode) {
+  getF(prvNode, crtNode) {
     const g =
       this._gScore.get(this.getKey(prvNode)) + this.getCost(prvNode, crtNode);
     const h = this.getHeuristic(crtNode, this.goalNode);
@@ -209,21 +201,21 @@ AStar.prototype = {
       H: h,
       G: g,
     };
-  },
+  }
 
   /* check if the node exists in the open area; returns that node, or null.
    * Uses the open-key map, so it finds the node at once instead of
    * scanning the whole open area. The check is explicit, not
    * truthiness, so a falsy node (for example 0) is still found. */
-  inOpenArea: function (node) {
+  inOpenArea(node) {
     const found = this._openKeys.get(this.getKey(node));
     return found !== undefined ? found : null;
-  },
+  }
 
   /* put a node's neighbours into the open area, if they are not closed.
    * To a neighbour already in the open area, get the new G value for it;
    * if the new G is smaller, change its parent to the current node. */
-  neighboursIntoOpenArea: function (node) {
+  neighboursIntoOpenArea(node) {
     const neighbors = this.getNeighbors(node);
     for (let i = 0; i < neighbors.length; i++) {
       let neighbor = neighbors[i];
@@ -245,7 +237,7 @@ AStar.prototype = {
         this._openKeys.set(key, neighbor);
       }
     }
-  },
+  }
 
   /* Get the node with smallest F from the open list, and move it
    * to the closed list. Returns that node, or null when the open
@@ -254,7 +246,7 @@ AStar.prototype = {
    * step, and it leaves the other nodes in their original order.
    * A strict < keeps the first node on a tie, so ties are broken
    * in discovery order, as a stable sort would. */
-  getOpenNodeWithMinF: function () {
+  getOpenNodeWithMinF() {
     if (this.openArea.length == 0) {
       return null;
     }
@@ -273,21 +265,21 @@ AStar.prototype = {
     this._closedKeys.add(key);
     this.closeArea.push(node);
     return node;
-  },
+  }
 
-  isFound: function () {
+  isFound() {
     return this._found;
-  },
+  }
 
-  isFinished: function () {
+  isFinished() {
     return this._finished;
-  },
+  }
 
   /* The route found, from start to goal, or null when not found.
    * Only valid after the search has finished. It walks the
    * came-from links backwards from the goal to the start,
    * then reverses them, so the result reads start to goal. */
-  getRoute: function () {
+  getRoute() {
     if (!this._found) {
       return null;
     }
@@ -302,15 +294,15 @@ AStar.prototype = {
     }
     route.reverse();
     return route;
-  },
+  }
 
   /* Run the whole search at once: init(), then step() until
    * finished. This is the simple entry point. */
-  findPath: function () {
+  findPath() {
     this.init();
     while (!this._finished) {
       this.step();
     }
     return this.getRoute();
-  },
-};
+  }
+}

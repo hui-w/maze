@@ -3,43 +3,43 @@
  * @repo https://github.com/hui-w/maze
  * @licence MIT
  */
-function Maze(rows, cols) {
-  this.rows = rows;
-  this.cols = cols;
-  this.cells = [];
-  this.walls = [];
-  this.tempWalls = []; //walls to handle when generating maze
+class Maze {
+  constructor(rows, cols) {
+    this.rows = rows;
+    this.cols = cols;
+    this.cells = [];
+    this.walls = [];
+    this.tempWalls = []; //walls to handle when generating maze
 
-  this.onUpdateUI = null;
-  this.onInitComplete = null;
-}
+    this.onUpdateUI = null;
+    this.onInitComplete = null;
+  }
 
-Maze.prototype = {
-  updateUI: function () {
+  updateUI() {
     if (typeof this.onUpdateUI == "function") {
       this.onUpdateUI();
     }
-  },
+  }
 
-  initComplete: function () {
+  initComplete() {
     if (typeof this.onInitComplete == "function") {
       this.onInitComplete();
     }
-  },
+  }
 
   /* generation progress, 0 to 1 */
-  getProgress: function () {
+  getProgress() {
     return this.cells.length ? this.connectedCount / this.cells.length : 0;
-  },
+  }
 
   /* change the grid size; call prepare() or init() afterwards to rebuild */
-  resize: function (rows, cols) {
+  resize(rows, cols) {
     this.rows = rows;
     this.cols = cols;
-  },
+  }
 
   /* build the cells and closed walls without generating the maze */
-  prepare: function () {
+  prepare() {
     //a new run invalidates any step-by-step generation still in progress
     this.runId = (this.runId || 0) + 1;
     this.tempWalls = [];
@@ -59,14 +59,14 @@ Maze.prototype = {
 
     //prepare all the walls
     this.generateWalls();
-  },
+  }
 
-  init: function () {
+  init() {
     this.prepare();
     this.generateMaze();
-  },
+  }
 
-  generateWalls: function () {
+  generateWalls() {
     for (let i = 0; i < this.rows * this.cols; i++) {
       if (i / this.cols < this.rows - 1) {
         //horizontal walls
@@ -90,10 +90,10 @@ Maze.prototype = {
         cellB.walls.push(wall);
       }
     }
-  },
+  }
 
   /* Randomized PRIM's algorithm */
-  generateMaze: function () {
+  generateMaze() {
     const that = this;
     const runId = this.runId;
     this.tempWalls = [];
@@ -112,7 +112,7 @@ Maze.prototype = {
       this.initComplete();
     } else {
       //run step by step
-      function runStep() {
+      const runStep = () => {
         if (runId != that.runId) {
           return;
         }
@@ -123,12 +123,12 @@ Maze.prototype = {
           //end
           that.initComplete();
         }
-      }
+      };
       runStep();
     }
-  },
+  }
 
-  processRandomWall: function (updateStep) {
+  processRandomWall(updateStep) {
     const randIdx = rand(0, this.tempWalls.length - 1);
     //pick a random wall from the list
     const wall = this.tempWalls[randIdx];
@@ -152,9 +152,9 @@ Maze.prototype = {
         this.fetchClosingWalls(this.tempWalls, cellA);
       }
     }
-  },
+  }
 
-  fetchClosingWalls: function (walls, cell) {
+  fetchClosingWalls(walls, cell) {
     //set the cell as connected
     cell.setConnected(true);
     this.connectedCount++;
@@ -166,10 +166,10 @@ Maze.prototype = {
         walls.push(wall);
       }
     }
-  },
+  }
 
-  redraw: function (context, cellSize) {
-    function drawRectangle(context, cell, cellSize, withPadding) {
+  redraw(context, cellSize) {
+    const drawRectangle = (context, cell, cellSize, withPadding) => {
       const padding = withPadding ? cellSize * 0.1 : 0;
       context.rect(
         cell.col * cellSize + padding,
@@ -177,7 +177,7 @@ Maze.prototype = {
         cellSize - 2 * padding,
         cellSize - 2 * padding,
       );
-    }
+    };
 
     context.save();
     context.lineWidth = 1;
@@ -254,21 +254,21 @@ Maze.prototype = {
     }
 
     context.restore();
-  },
-};
-
-function Wall(cellA, cellB) {
-  this.cellA = cellA;
-  this.cellB = cellB;
-  this.isOpen = false;
+  }
 }
 
-Wall.prototype = {
-  setOpen: function (isOpen) {
-    this.isOpen = isOpen;
-  },
+class Wall {
+  constructor(cellA, cellB) {
+    this.cellA = cellA;
+    this.cellB = cellB;
+    this.isOpen = false;
+  }
 
-  getOtherCell: function (cell) {
+  setOpen(isOpen) {
+    this.isOpen = isOpen;
+  }
+
+  getOtherCell(cell) {
     if (cell.row == this.cellA.row && cell.col == this.cellA.col) {
       return this.cellB;
     } else if (cell.row == this.cellB.row && cell.col == this.cellB.col) {
@@ -276,22 +276,22 @@ Wall.prototype = {
     } else {
       return null;
     }
-  },
-};
-
-function Cell(row, col) {
-  this.row = row;
-  this.col = col;
-  this.connected = false;
-  this.walls = [];
+  }
 }
 
-Cell.prototype = {
-  setConnected: function (connected) {
-    this.connected = connected;
-  },
+class Cell {
+  constructor(row, col) {
+    this.row = row;
+    this.col = col;
+    this.connected = false;
+    this.walls = [];
+  }
 
-  canGoTo: function (node) {
+  setConnected(connected) {
+    this.connected = connected;
+  }
+
+  canGoTo(node) {
     //check if the specified node is on the other side of an open wall
     for (let i = 0; i < this.walls.length; i++) {
       let wall = this.walls[i];
@@ -304,5 +304,5 @@ Cell.prototype = {
       }
     }
     return false;
-  },
-};
+  }
+}

@@ -17,6 +17,12 @@ function load() {
     vm.runInContext(code, context, { filename: file });
   });
   vm.runInContext("Config.Maze.stepDelay = 0; Config.Path.stepDelay = 0;", context);
+  //class declarations do not create properties on the global object,
+  //unlike function declarations, so pull them out by name for the tests
+  Object.assign(
+    context,
+    vm.runInContext("({ Maze, Wall, Cell, AStar, Path })", context),
+  );
   return context;
 }
 
