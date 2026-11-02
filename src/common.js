@@ -4,9 +4,9 @@
 * @licence MIT 
 */ 
 function $() {
-	var elements = new Array();
-	for (var i = 0; i < arguments.length; i++) {
-		var element = arguments[i];
+	const elements = new Array();
+	for (let i = 0; i < arguments.length; i++) {
+		let element = arguments[i];
 		if (typeof element == 'string')
 			element = document.getElementById(element);
 		if (arguments.length == 1)
@@ -29,10 +29,10 @@ Array.prototype.removeAt = function (indexNum) {
 };
 
 Element.prototype.createChild = function (tag, param, innerHTML) {
-	var element = document.createElement(tag);
+	const element = document.createElement(tag);
 	this.appendChild(element);
 	if (param) {
-		for (var key in param) {
+		for (let key in param) {
 			element.setAttribute(key, param[key]);
 		}
 	}
@@ -55,12 +55,12 @@ Element.prototype.addClassName = function (a) {
 
 Element.prototype.removeClassName = function (b) {
 	if (this.hasClassName(b)) {
-		var a = this.className;
+		const a = this.className;
 		this.className = a.replace(new RegExp("(?:^|\\s+)" + b + "(?:\\s+|$)", "g"), " ");
 	}
 }
 
-var canvasPrototype = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
+const canvasPrototype = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
 canvasPrototype.antiFuzzyLine = function (x1, y1, x2, y2) {
 	if (this.lineWidth % 2 == 1) {
 		//snap to whole pixels (cell size may be fractional) and shift by 0.5 to avoid fuzzy line
@@ -79,9 +79,9 @@ verticalAlign: top, middle, bottom
  */
 canvasPrototype.fillTextEx = function (text, x, y, horizontalAlign, verticalAlign) {
 	this.save();
-	var textLeft = x;
+	let textLeft = x;
 	if (horizontalAlign != "left") {
-		var textWidth = this.measureText(text).width;
+		const textWidth = this.measureText(text).width;
 		if (horizontalAlign == "center") {
 			textLeft -= textWidth / 2;
 		} else if (horizontalAlign == "right") {

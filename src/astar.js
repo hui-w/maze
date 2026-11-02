@@ -70,23 +70,23 @@
  *
  * Sample usage:
  *
- *   var graph = {
+ *   const graph = {
  *     A: ["B", "D"],
  *     B: ["C"],
  *     C: [],
  *     D: ["C"],
  *   };
- *   var astar = new AStar("A", "C", function (node) {
+ *   const astar = new AStar("A", "C", function (node) {
  *     return graph[node];
  *   });
- *   var route = astar.findPath();
+ *   let route = astar.findPath();
  *   // route: ["A", "B", "C"]  (or ["A", "D", "C"] - both cost 2)
  *   // route is null when no route exists, e.g. start "C", goal "A".
  *
  * For an animated search, drive it yourself instead of findPath():
  *
  *   astar.init();
- *   var node;
+ *   let node;
  *   while ((node = astar.step()) != null) {
  *     // draw astar.openArea / astar.closeArea here
  *   }
@@ -151,7 +151,8 @@ AStar.prototype = {
     this._cameFrom = new Map();
     this._gScore = new Map();
     this._fScore = new Map();
-    this._openKeys = new Map([[this.getKey(this.startNode), this.startNode]]);
+    this._openKeys = new Map();
+    this._openKeys.set(this.getKey(this.startNode), this.startNode);
     this._closedKeys = new Set();
     this._gScore.set(this.getKey(this.startNode), 0);
     this._fScore.set(
@@ -180,8 +181,8 @@ AStar.prototype = {
     }
 
     //1. pick the most promising candidate and move it to the closed list
-    var current = this.getOpenNodeWithMinF();
-    var currentKey = this.getKey(current);
+    const current = this.getOpenNodeWithMinF();
+    const currentKey = this.getKey(current);
 
     //2. if it is the goal, the cheapest route to it is now known
     if (currentKey === this.getKey(this.goalNode)) {
@@ -200,9 +201,9 @@ AStar.prototype = {
    * heuristic estimate from the neighbour to the goal, F = G + H.
    * The scores are kept in this object's maps, not on the nodes. */
   getF: function (prvNode, crtNode) {
-    var g =
+    const g =
       this._gScore.get(this.getKey(prvNode)) + this.getCost(prvNode, crtNode);
-    var h = this.getHeuristic(crtNode, this.goalNode);
+    const h = this.getHeuristic(crtNode, this.goalNode);
     return {
       F: h + g,
       H: h,
@@ -215,7 +216,7 @@ AStar.prototype = {
    * scanning the whole open area. The check is explicit, not
    * truthiness, so a falsy node (for example 0) is still found. */
   inOpenArea: function (node) {
-    var found = this._openKeys.get(this.getKey(node));
+    const found = this._openKeys.get(this.getKey(node));
     return found !== undefined ? found : null;
   },
 
@@ -223,16 +224,16 @@ AStar.prototype = {
    * To a neighbour already in the open area, get the new G value for it;
    * if the new G is smaller, change its parent to the current node. */
   neighboursIntoOpenArea: function (node) {
-    var neighbors = this.getNeighbors(node);
-    for (var i = 0; i < neighbors.length; i++) {
-      var neighbor = neighbors[i];
-      var key = this.getKey(neighbor);
+    const neighbors = this.getNeighbors(node);
+    for (let i = 0; i < neighbors.length; i++) {
+      let neighbor = neighbors[i];
+      let key = this.getKey(neighbor);
       //already expanded: its cheapest route is already known, skip it
       if (this._closedKeys.has(key)) {
         continue;
       }
-      var fObj = this.getF(node, neighbor);
-      var tmpNode = this.inOpenArea(neighbor);
+      let fObj = this.getF(node, neighbor);
+      let tmpNode = this.inOpenArea(neighbor);
       if (tmpNode !== null && this._gScore.get(key) <= fObj.G) {
         continue;
       }
@@ -257,17 +258,17 @@ AStar.prototype = {
     if (this.openArea.length == 0) {
       return null;
     }
-    var minIndex = 0;
-    var minF = this._fScore.get(this.getKey(this.openArea[0]));
-    for (var i = 1; i < this.openArea.length; i++) {
-      var f = this._fScore.get(this.getKey(this.openArea[i]));
+    let minIndex = 0;
+    let minF = this._fScore.get(this.getKey(this.openArea[0]));
+    for (let i = 1; i < this.openArea.length; i++) {
+      let f = this._fScore.get(this.getKey(this.openArea[i]));
       if (f < minF) {
         minF = f;
         minIndex = i;
       }
     }
-    var node = this.openArea.splice(minIndex, 1)[0];
-    var key = this.getKey(node);
+    const node = this.openArea.splice(minIndex, 1)[0];
+    const key = this.getKey(node);
     this._openKeys.delete(key);
     this._closedKeys.add(key);
     this.closeArea.push(node);
@@ -290,8 +291,8 @@ AStar.prototype = {
     if (!this._found) {
       return null;
     }
-    var route = [];
-    var node = this.goalNode;
+    const route = [];
+    let node = this.goalNode;
     while (node !== undefined) {
       route.push(node);
       if (this.getKey(node) === this.getKey(this.startNode)) {

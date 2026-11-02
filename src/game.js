@@ -3,7 +3,7 @@
  * @repo https://github.com/hui-w/maze
  * @licence MIT
  */
-var GameState = {
+const GameState = {
   Setup: "Choose a size and generate a maze",
   Generating: "Generating maze...",
   Playing: "Maze ready - find your way to the exit",
@@ -12,7 +12,7 @@ var GameState = {
 };
 
 function Game() {
-  var size = Config.MazeSize[Config.Game.defaultSize];
+  const size = Config.MazeSize[Config.Game.defaultSize];
   this.maze = new Maze(size, size);
   this.path = new Path();
   this.state = GameState.Setup;
@@ -43,7 +43,7 @@ function Game() {
 
 Game.prototype = {
   init: function () {
-    var that = this;
+    const that = this;
     this.width = document.documentElement.clientWidth;
     this.height = document.documentElement.clientHeight;
     this.selectedSize = this.loadSetting(
@@ -56,7 +56,7 @@ Game.prototype = {
       Config.AnimationDelay.MazeGeneration,
       Config.Game.defaultAnimationDelay,
     );
-    var size = Config.MazeSize[this.selectedSize];
+    const size = Config.MazeSize[this.selectedSize];
     this.maze.resize(size, size);
     this.render();
 
@@ -94,7 +94,7 @@ Game.prototype = {
   },
 
   updateToolbar: function () {
-    var s = this.state;
+    const s = this.state;
     this.statusElement.innerHTML = s + "<span></span>";
     this.updateProgress();
     function setEnabled(element, enabled) {
@@ -104,7 +104,7 @@ Game.prototype = {
         element.addClassName("disabled");
       }
     }
-    for (var i = 0; i < this.settingControls.length; i++) {
+    for (let i = 0; i < this.settingControls.length; i++) {
       //only locked while an animation is running
       setEnabled(
         this.settingControls[i],
@@ -124,7 +124,7 @@ Game.prototype = {
 
   /* show the generation percentage next to the status text */
   updateProgress: function () {
-    var element = this.statusElement.lastChild;
+    const element = this.statusElement.lastChild;
     if (!element) {
       return;
     }
@@ -145,7 +145,7 @@ Game.prototype = {
   updateCounters: function () {
     //no entrance yet (Setup / Generating): getStepCount is null, and
     //Steps is not applicable, like Path Length before an auto solve
-    var stepCount = this.path.getStepCount();
+    const stepCount = this.path.getStepCount();
     $("counter-steps").innerHTML = stepCount == null ? "N/A" : stepCount;
     this.pathLengthElement.innerHTML = this.autoPath
       ? this.path.getPathLength()
@@ -153,11 +153,11 @@ Game.prototype = {
   },
 
   render: function () {
-    var that = this;
+    const that = this;
 
     //create the wrapper
-    var rootElement = document.body;
-    var wrapper = rootElement.createChild("div", {
+    const rootElement = document.body;
+    const wrapper = rootElement.createChild("div", {
       id: "game-wrapper",
       style: "padding: " + Config.Game.padding + "px",
     });
@@ -176,8 +176,8 @@ Game.prototype = {
 
     //check if the window size is changed
     function checkWindowsize() {
-      var nwidth = document.documentElement.clientWidth;
-      var nheight = document.documentElement.clientHeight;
+      const nwidth = document.documentElement.clientWidth;
+      const nheight = document.documentElement.clientHeight;
       if (nwidth != that.width || nheight != that.height) {
         that.width = nwidth;
         that.height = nheight;
@@ -205,10 +205,10 @@ Game.prototype = {
   },
 
   renderToolbar: function (parent) {
-    var that = this;
+    const that = this;
 
     //tool bar container
-    var tools = parent.createChild("div", {
+    const tools = parent.createChild("div", {
       style: "padding:" + Config.Game.padding + "px;",
       class: "toolbar",
     });
@@ -233,10 +233,10 @@ Game.prototype = {
     this.newToolElement(tools, "-", false, null);
 
     //animation delays (applies to both maze generation and path finding)
-    var line = this.newToolElement(tools, "|", false, null);
+    let line = this.newToolElement(tools, "|", false, null);
     this.newToolElement(line, "Animation: ", false, null);
-    var animationDelays = Object.keys(Config.AnimationDelay.MazeGeneration);
-    for (var i = 0; i < animationDelays.length; i++) {
+    const animationDelays = Object.keys(Config.AnimationDelay.MazeGeneration);
+    for (let i = 0; i < animationDelays.length; i++) {
       if (i > 0) {
         this.newToolElement(line, " ", false, null);
       }
@@ -258,8 +258,8 @@ Game.prototype = {
     //maze size
     line = this.newToolElement(tools, "|", false, null);
     this.newToolElement(line, "Maze Size: ", false, null);
-    var sizes = Object.keys(Config.MazeSize);
-    for (var i = 0; i < sizes.length; i++) {
+    const sizes = Object.keys(Config.MazeSize);
+    for (let i = 0; i < sizes.length; i++) {
       if (i > 0) {
         this.newToolElement(line, " ", false, null);
       }
@@ -301,7 +301,7 @@ Game.prototype = {
     );
 
     //move, show path and counter stay hidden until the first maze is generated
-    var part = tools.createChild("div", {
+    const part = tools.createChild("div", {
       style: "display:none",
     });
     this.playPart = part;
@@ -362,7 +362,7 @@ Game.prototype = {
     );
 
     //footer: copyright and about
-    var footer = tools.createChild("div", {
+    const footer = tools.createChild("div", {
       class: "toolbar-footer",
     });
     footer.createChild("span", null, "Copyright \u00A9 QLike.com");
@@ -376,11 +376,11 @@ Game.prototype = {
     if ($("about-overlay")) {
       return;
     }
-    var overlay = document.body.createChild("div", {
+    const overlay = document.body.createChild("div", {
       id: "about-overlay",
       class: "about-overlay",
     });
-    var dialog = overlay.createChild("div", { class: "about-dialog" });
+    const dialog = overlay.createChild("div", { class: "about-dialog" });
     dialog.createChild("h2", null, "About this Maze Game");
     dialog.createChild(
       "p",
@@ -413,11 +413,11 @@ Game.prototype = {
       'GitHub: <a href="https://github.com/hui-w/maze" target="_blank">https://github.com/hui-w/maze</a><br>' +
         'Feedback: <a href="mailto:webmaster@qlike.com">webmaster@qlike.com</a>',
     );
-    var close = function () {
+    const close = function () {
       document.removeEventListener("keydown", onKey, false);
       document.body.removeChild(overlay);
     };
-    var onKey = function (e) {
+    const onKey = function (e) {
       if (e.keyCode == 27) {
         close();
       }
@@ -428,8 +428,8 @@ Game.prototype = {
         close();
       }
     };
-    var button = dialog.createChild("div", { class: "about-actions" });
-    var closeButton = button.createChild(
+    const button = dialog.createChild("div", { class: "about-actions" });
+    const closeButton = button.createChild(
       "span",
       { class: "toolbar-linkbutton about-close" },
       "Close",
@@ -438,7 +438,7 @@ Game.prototype = {
   },
 
   newToolElement: function (parent, text, highlight, handler) {
-    var element = null;
+    let element = null;
     if (text == "|") {
       //new line
       element = parent.createChild("div", {
@@ -483,7 +483,7 @@ Game.prototype = {
   /* localStorage may be unavailable (private mode); fall back to the default */
   loadSetting: function (key, allowed, fallback) {
     try {
-      var value = localStorage.getItem("maze." + key);
+      const value = localStorage.getItem("maze." + key);
       if (value && allowed.hasOwnProperty(value)) {
         return value;
       }
@@ -499,7 +499,7 @@ Game.prototype = {
 
   /* the chosen option is highlighted and no longer clickable */
   markSelected: function (buttons, value) {
-    for (var key in buttons) {
+    for (let key in buttons) {
       if (key == value) {
         buttons[key].addClassName("selected");
       } else {
@@ -517,7 +517,7 @@ Game.prototype = {
   },
 
   resizeMaze: function (size) {
-    var n = Config.MazeSize[size];
+    const n = Config.MazeSize[size];
     this.maze.resize(n, n);
     this.markSelected(this.sizeButtons, size);
     this.resizeCanvas();
@@ -539,7 +539,7 @@ Game.prototype = {
     if (this.state != GameState.Playing) {
       return;
     }
-    var keyCode = e.keyCode;
+    const keyCode = e.keyCode;
     switch (keyCode) {
       case 37:
         this.arrowKeyStatus |= 1;
@@ -559,13 +559,13 @@ Game.prototype = {
 
   /* move the player in the held directions, and repeat until all directions are released */
   startMoving: function () {
-    var that = this;
+    const that = this;
     if (this.arrowKeyStatus == 0 || this.keyboardTimer != null) {
       return;
     }
     function keyboardTimerHandler() {
-      var dRow = 0;
-      var dCol = 0;
+      let dRow = 0;
+      let dCol = 0;
       if ((that.arrowKeyStatus & 1) > 0) {
         //left
         dCol--;
@@ -603,22 +603,22 @@ Game.prototype = {
 
   /* touch and mouse: press anywhere on the maze and drag; the player moves in the drag direction while held */
   bindPointer: function () {
-    var that = this;
-    var canvas = this.canvas;
-    var activePointer = null;
-    var startX = 0;
-    var startY = 0;
+    const that = this;
+    const canvas = this.canvas;
+    let activePointer = null;
+    let startX = 0;
+    let startY = 0;
 
     function update(e) {
       if (that.state != GameState.Playing) {
         that.stopMoving();
         return;
       }
-      var dx = e.clientX - startX;
-      var dy = e.clientY - startY;
+      let dx = e.clientX - startX;
+      let dy = e.clientY - startY;
 
       //the press point trails behind the finger, so changing direction only needs a short drag
-      var max = Config.Game.dragThreshold * 3;
+      const max = Config.Game.dragThreshold * 3;
       if (Math.abs(dx) > max) {
         startX += dx - (dx > 0 ? max : -max);
         dx = dx > 0 ? max : -max;
@@ -679,7 +679,7 @@ Game.prototype = {
 
   /* keyboard events: key up */
   keyUp: function (e) {
-    var keyCode = e.keyCode;
+    const keyCode = e.keyCode;
     switch (keyCode) {
       case 37:
         this.arrowKeyStatus &= ~1;
@@ -703,18 +703,18 @@ Game.prototype = {
   },
 
   resizeCanvas: function () {
-    var wrapperWidth = this.width - Config.Game.padding * 2;
-    var wrapperHeight = this.height - Config.Game.padding * 2;
+    const wrapperWidth = this.width - Config.Game.padding * 2;
+    const wrapperHeight = this.height - Config.Game.padding * 2;
     //fractional cell size so the board always fills the available space
-    var boardWidth = Math.floor(wrapperWidth);
-    var boardHeight = Math.floor(wrapperHeight);
+    const boardWidth = Math.floor(wrapperWidth);
+    const boardHeight = Math.floor(wrapperHeight);
     this.cellSize = Math.min(
       boardWidth / this.maze.cols,
       boardHeight / this.maze.rows,
     );
 
     //back the canvas with device pixels so lines stay sharp on high-DPI screens
-    var ratio = window.devicePixelRatio || 1;
+    const ratio = window.devicePixelRatio || 1;
     this.canvasWidth = Math.round(this.maze.cols * this.cellSize);
     this.canvasHeight = Math.round(this.maze.rows * this.cellSize);
     this.canvas.width = Math.round(this.canvasWidth * ratio);
@@ -766,7 +766,7 @@ Game.prototype = {
   },
 };
 
-var game = null;
+let game = null;
 addEventListener("load", function () {
   game = new Game();
 });

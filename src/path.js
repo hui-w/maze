@@ -63,7 +63,7 @@ Path.prototype = {
 
   getPath: function () {
     this.manuallySolved = false;
-    var that = this;
+    const that = this;
     if (this.entranceNode == null || this.exitNode == null) {
       return;
     }
@@ -78,9 +78,9 @@ Path.prototype = {
       this.exitNode,
       function (node) {
         //neighbours are the cells on the other side of an open wall
-        var neighbors = [];
-        for (var i = 0; i < node.walls.length; i++) {
-          var wall = node.walls[i];
+        const neighbors = [];
+        for (let i = 0; i < node.walls.length; i++) {
+          let wall = node.walls[i];
           if (wall.isOpen) {
             neighbors.push(wall.getOtherCell(node));
           }
@@ -165,7 +165,7 @@ Path.prototype = {
     }
 
     function drawArrow(context, cell, cellSize, withPadding) {
-      var padding = withPadding ? cellSize * 0.1 : 0;
+      const padding = withPadding ? cellSize * 0.1 : 0;
       context.moveTo(
         cell.col * cellSize + padding,
         cell.row * cellSize + padding,
@@ -181,7 +181,7 @@ Path.prototype = {
     }
 
     function drawRectangle(context, cell, cellSize, withPadding) {
-      var padding = withPadding ? cellSize * 0.1 : 0;
+      const padding = withPadding ? cellSize * 0.1 : 0;
       context.rect(
         cell.col * cellSize + padding,
         cell.row * cellSize + padding,
@@ -191,7 +191,7 @@ Path.prototype = {
     }
 
     function drawEllipse(context, cell, cellSize, withPadding) {
-      var padding = withPadding ? cellSize * 0.1 : 0;
+      const padding = withPadding ? cellSize * 0.1 : 0;
       context.arc(
         cell.col * cellSize + cellSize / 2,
         cell.row * cellSize + cellSize / 2,
@@ -207,7 +207,7 @@ Path.prototype = {
     if (Config.Path.stepDelay > 0 && this.astar != null) {
       //close area
       context.beginPath();
-      for (var i = 0; i < this.astar.closeArea.length; i++) {
+      for (let i = 0; i < this.astar.closeArea.length; i++) {
         drawRectangle(context, this.astar.closeArea[i], cellSize, false);
       }
       context.fillStyle = Config.Path.closeAreaColor;
@@ -215,7 +215,7 @@ Path.prototype = {
 
       //open area
       context.beginPath();
-      for (var i = 0; i < this.astar.openArea.length; i++) {
+      for (let i = 0; i < this.astar.openArea.length; i++) {
         drawRectangle(context, this.astar.openArea[i], cellSize, false);
       }
       context.fillStyle = Config.Path.openAreaColor;
@@ -225,14 +225,14 @@ Path.prototype = {
     //line: auto mode draws the A* route (aStarPath); manual mode, once the exit is
     //reached, draws every cell actually walked, in the order visited,
     //using the same line style as the auto mode
-    var line = this.manuallySolved ? this.manualPath : this.aStarPath;
+    const line = this.manuallySolved ? this.manualPath : this.aStarPath;
     if (line.length > 0) {
       context.beginPath();
-      for (var i = 0; i < line.length; i++) {
-        var row = line[i].row;
-        var col = line[i].col;
-        var x = col * cellSize + cellSize / 2;
-        var y = row * cellSize + cellSize / 2;
+      for (let i = 0; i < line.length; i++) {
+        let row = line[i].row;
+        let col = line[i].col;
+        let x = col * cellSize + cellSize / 2;
+        let y = row * cellSize + cellSize / 2;
 
         if (i == 0) {
           context.moveTo(x, y);
@@ -246,7 +246,7 @@ Path.prototype = {
       context.stroke();
     }
 
-    var markerAtExit = this.isAtExit();
+    const markerAtExit = this.isAtExit();
     if (!markerAtExit) {
       //the player and A* search share one marker because they run in separate modes
       context.fillStyle = Config.Path.stepColor;
@@ -348,9 +348,9 @@ Path.prototype = {
     if (this.stepNode == null) {
       return false;
     }
-    var nextRow = this.stepNode.row + row;
-    var nextCol = this.stepNode.col + col;
-    var nextNode = this.getNode(nextRow, nextCol);
+    const nextRow = this.stepNode.row + row;
+    const nextCol = this.stepNode.col + col;
+    const nextNode = this.getNode(nextRow, nextCol);
     if (nextNode != null && this.stepNode.canGoTo(nextNode)) {
       if (this.manualPath.length == 0) {
         //trail was not seeded (stepNode set without setEntranceAndExit)

@@ -50,9 +50,9 @@ Maze.prototype = {
     this.walls = [];
 
     //prepare all the cells
-    for (var row = 0; row < this.rows; row++) {
-      for (var col = 0; col < this.cols; col++) {
-        var cell = new Cell(row, col);
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        let cell = new Cell(row, col);
         this.cells.push(cell);
       }
     }
@@ -67,12 +67,12 @@ Maze.prototype = {
   },
 
   generateWalls: function () {
-    for (var i = 0; i < this.rows * this.cols; i++) {
+    for (let i = 0; i < this.rows * this.cols; i++) {
       if (i / this.cols < this.rows - 1) {
         //horizontal walls
-        var cellA = this.cells[i];
-        var cellB = this.cells[i + this.cols];
-        var wall = new Wall(cellA, cellB);
+        let cellA = this.cells[i];
+        let cellB = this.cells[i + this.cols];
+        let wall = new Wall(cellA, cellB);
         this.walls.push(wall);
 
         cellA.walls.push(wall);
@@ -81,9 +81,9 @@ Maze.prototype = {
 
       if (i % this.cols < this.cols - 1) {
         //vertical walls
-        var cellA = this.cells[i];
-        var cellB = this.cells[i + 1];
-        var wall = new Wall(cellA, cellB);
+        let cellA = this.cells[i];
+        let cellB = this.cells[i + 1];
+        let wall = new Wall(cellA, cellB);
         this.walls.push(wall);
 
         cellA.walls.push(wall);
@@ -94,8 +94,8 @@ Maze.prototype = {
 
   /* Randomized PRIM's algorithm */
   generateMaze: function () {
-    var that = this;
-    var runId = this.runId;
+    const that = this;
+    const runId = this.runId;
     this.tempWalls = [];
 
     //start from the any wall
@@ -129,11 +129,11 @@ Maze.prototype = {
   },
 
   processRandomWall: function (updateStep) {
-    var randIdx = rand(0, this.tempWalls.length - 1);
+    const randIdx = rand(0, this.tempWalls.length - 1);
     //pick a random wall from the list
-    var wall = this.tempWalls[randIdx];
-    var cellA = wall.cellA;
-    var cellB = wall.cellB;
+    const wall = this.tempWalls[randIdx];
+    const cellA = wall.cellA;
+    const cellB = wall.cellB;
     if (cellA.connected && cellB.connected) {
       //cells connected, remove the wall from the temp array
       this.tempWalls.removeAt(randIdx);
@@ -160,8 +160,8 @@ Maze.prototype = {
     this.connectedCount++;
 
     //get all the closing walls, and add them into the temp list
-    for (var i = 0; i < cell.walls.length; i++) {
-      var wall = cell.walls[i];
+    for (let i = 0; i < cell.walls.length; i++) {
+      let wall = cell.walls[i];
       if (!wall.isOpen) {
         walls.push(wall);
       }
@@ -170,7 +170,7 @@ Maze.prototype = {
 
   redraw: function (context, cellSize) {
     function drawRectangle(context, cell, cellSize, withPadding) {
-      var padding = withPadding ? cellSize * 0.1 : 0;
+      const padding = withPadding ? cellSize * 0.1 : 0;
       context.rect(
         cell.col * cellSize + padding,
         cell.row * cellSize + padding,
@@ -184,13 +184,13 @@ Maze.prototype = {
 
     //walls
     context.beginPath();
-    for (var i = 0; i < this.walls.length; i++) {
+    for (let i = 0; i < this.walls.length; i++) {
       if (this.walls[i].isOpen) {
         continue;
       }
-      var wall = this.walls[i];
-      var x = wall.cellB.col * cellSize;
-      var y = wall.cellB.row * cellSize;
+      let wall = this.walls[i];
+      let x = wall.cellB.col * cellSize;
+      let y = wall.cellB.row * cellSize;
 
       if (wall.cellA.row == wall.cellB.row) {
         //vertical wall
@@ -223,12 +223,12 @@ Maze.prototype = {
     if (Config.Maze.stepDelay > 0) {
       context.beginPath();
       //walls
-      for (var i = 0; i < this.tempWalls.length; i++) {
-        var wall = this.tempWalls[i];
+      for (let i = 0; i < this.tempWalls.length; i++) {
+        let wall = this.tempWalls[i];
 
         //wall
-        var x = wall.cellB.col * cellSize;
-        var y = wall.cellB.row * cellSize;
+        let x = wall.cellB.col * cellSize;
+        let y = wall.cellB.row * cellSize;
         if (wall.cellA.row == wall.cellB.row) {
           //vertical wall
           context.antiFuzzyLine(x, y, x, y + cellSize);
@@ -242,8 +242,8 @@ Maze.prototype = {
 
       //cells
       context.beginPath();
-      for (var i = 0; i < this.tempWalls.length; i++) {
-        var wall = this.tempWalls[i];
+      for (let i = 0; i < this.tempWalls.length; i++) {
+        let wall = this.tempWalls[i];
 
         //cells
         drawRectangle(context, wall.cellA, cellSize, false);
@@ -293,12 +293,12 @@ Cell.prototype = {
 
   canGoTo: function (node) {
     //check if the specified node is on the other side of an open wall
-    for (var i = 0; i < this.walls.length; i++) {
-      var wall = this.walls[i];
+    for (let i = 0; i < this.walls.length; i++) {
+      let wall = this.walls[i];
       if (!wall.isOpen) {
         continue;
       }
-      var other = wall.getOtherCell(this);
+      let other = wall.getOtherCell(this);
       if (other != null && other.row == node.row && other.col == node.col) {
         return true;
       }

@@ -3,7 +3,7 @@
  * @repo https://github.com/hui-w/maze
  * @licence MIT
  */
-var Config = {
+const Config = {
   Game: {
     padding: 12,
     backgroundColor: "#FFFDF7",
