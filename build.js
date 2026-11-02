@@ -6,7 +6,14 @@ const CleanCSS = require("clean-css");
 
 const src = path.join(__dirname, "src");
 const out = path.join(__dirname, "release");
-const scripts = ["common.js", "config.js", "game.js", "maze.js", "path.js"];
+const scripts = [
+  "common.js",
+  "config.js",
+  "game.js",
+  "maze.js",
+  "astar.js",
+  "path.js",
+];
 
 async function build() {
   fs.mkdirSync(out, { recursive: true });

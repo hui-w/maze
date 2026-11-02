@@ -44,7 +44,8 @@ src/
   common.js   Helpers (random numbers, DOM and canvas utilities)
   config.js   Sizes, colours and animation delays
   maze.js     Maze, Cell and Wall: grid model, generation and drawing
-  path.js     Path and AStarNode: A* search, player movement and drawing
+  astar.js    AStar: reusable A* search, no maze or drawing knowledge
+  path.js     Path and AStarNode: player movement and drawing
   game.js     Game: toolbar, state machine, keyboard input and canvas
   web.css     Toolbar styles
 release/      Minified build served on GitHub Pages

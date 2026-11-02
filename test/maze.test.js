@@ -12,7 +12,7 @@ function load() {
     document: {},
   });
   context.window = context;
-  ["common.js", "config.js", "maze.js", "path.js"].forEach(function (file) {
+  ["common.js", "config.js", "maze.js", "astar.js", "path.js"].forEach(function (file) {
     const code = fs.readFileSync(path.join(__dirname, "..", "src", file), "utf8");
     vm.runInContext(code, context, { filename: file });
   });
@@ -87,23 +87,23 @@ sizes.forEach(function (size) {
     assert.strictEqual(p.stepNode, p.exitNode, "marker should finish at the exit");
     assert.strictEqual(p.manuallySolved, false, "A* should not count as a manual solve");
 
-    //the A* route is stored from exit to entrance
+    //the A* route is stored from entrance to exit
     const route = p.aStarPath;
     assert.deepStrictEqual(
       { row: route[0].row, col: route[0].col },
-      { row: p.exitNode.row, col: p.exitNode.col },
+      { row: p.entranceNode.row, col: p.entranceNode.col },
     );
     const last = route[route.length - 1];
     assert.deepStrictEqual(
       { row: last.row, col: last.col },
-      { row: p.entranceNode.row, col: p.entranceNode.col },
+      { row: p.exitNode.row, col: p.exitNode.col },
     );
     assert.strictEqual(p.getPathLength(), route.length - 1);
 
     //every step moves to a neighbouring cell through an open wall
     for (let i = 0; i < route.length - 1; i++) {
-      const from = p.getNode(route[i + 1].row, route[i + 1].col);
-      const to = p.getNode(route[i].row, route[i].col);
+      const from = p.getNode(route[i].row, route[i].col);
+      const to = p.getNode(route[i + 1].row, route[i + 1].col);
       assert.ok(from.canGoTo(to), "step " + i + " crosses a wall");
     }
 
@@ -113,7 +113,7 @@ sizes.forEach(function (size) {
       p.exitNode.row,
       p.exitNode.col,
     );
-    for (let i = route.length - 2; i >= 0; i--) {
+    for (let i = 1; i < route.length; i++) {
       const target = route[i];
       assert.ok(
         p.moveStep(target.row - p.stepNode.row, target.col - p.stepNode.col),
@@ -123,7 +123,7 @@ sizes.forEach(function (size) {
     assert.strictEqual(p.manuallySolved, true, "manual arrival should mark the maze solved");
 
     //manual exit line: every cell walked, entrance first and exit last,
-    //in the order visited (the reverse of the A* route here)
+    //in the order visited (the A* route itself)
     //compare row/col literals, not the vm-context objects themselves
     assert.strictEqual(p.manualPath.length, route.length);
     assert.deepStrictEqual(
@@ -141,8 +141,8 @@ sizes.forEach(function (size) {
       assert.deepStrictEqual(
         { row: p.manualPath[i].row, col: p.manualPath[i].col },
         {
-          row: route[route.length - 1 - i].row,
-          col: route[route.length - 1 - i].col,
+          row: route[i].row,
+          col: route[i].col,
         },
       );
     }
@@ -155,8 +155,8 @@ test("manual path includes every visited cell, including backtracks", function (
   p.init(maze);
   p.getPath();
   const route = p.aStarPath;
-  //walked order: entrance first, exit last
-  const walked = route.slice().reverse();
+  //walked order: entrance first, exit last (the A* route itself)
+  const walked = route.slice();
   p.setEntranceAndExit(
     p.entranceNode.row,
     p.entranceNode.col,
@@ -195,7 +195,7 @@ test("step count is derived from the manual path", function () {
   p.init(maze);
   p.getPath();
   const route = p.aStarPath;
-  const walked = route.slice().reverse();
+  const walked = route.slice();
   p.setEntranceAndExit(
     p.entranceNode.row,
     p.entranceNode.col,
@@ -221,6 +221,69 @@ test("step count is derived from the manual path", function () {
   p.getPath();
   assert.strictEqual(p.manuallySolved, false);
   assert.strictEqual(p.getStepCount(), walked.length - 1);
+});
+
+test("AStar works on a plain graph, without a maze", function () {
+  //plain nodes, no row/col, no maze, no canvas
+  const a = { id: "A" };
+  const b = { id: "B" };
+  const c = { id: "C" };
+  const d = { id: "D" };
+  const graph = { A: [b, d], B: [c], C: [], D: [c] };
+  const astar = new ctx.AStar(
+    a,
+    c,
+    function (node) {
+      return graph[node.id];
+    },
+    {
+      getKey: function (node) {
+        return node.id;
+      },
+    },
+  );
+  const route = astar.findPath();
+  //start first, goal last, both included; the cheaper route wins
+  //(A-B-C costs 2, A-D-C costs 2 as well, so either is valid here;
+  //assert the ends and the length, not the middle, for this graph)
+  assert.strictEqual(route[0], a);
+  assert.strictEqual(route[route.length - 1], c);
+  assert.strictEqual(route.length, 3);
+  //no mutation: the search kept its links and scores to itself
+  assert.deepStrictEqual(Object.keys(a), ["id"]);
+  assert.deepStrictEqual(Object.keys(b), ["id"]);
+  //no route at all returns null, not an empty route
+  const blocked = new ctx.AStar(
+    c,
+    a,
+    function (node) {
+      return graph[node.id];
+    },
+    {
+      getKey: function (node) {
+        return node.id;
+      },
+    },
+  );
+  assert.strictEqual(blocked.findPath(), null);
+  //start is the goal: the route is just the start node
+  const same = new ctx.AStar(
+    a,
+    a,
+    function (node) {
+      return graph[node.id];
+    },
+    {
+      getKey: function (node) {
+        return node.id;
+      },
+    },
+  );
+  const sameRoute = same.findPath();
+  //compare by identity, not deepStrictEqual: the route array is built
+  //inside the vm context, so its prototype differs from this realm's
+  assert.strictEqual(sameRoute.length, 1);
+  assert.strictEqual(sameRoute[0], a);
 });
 
 test("entrance is on the left edge and exit on the right edge", function () {

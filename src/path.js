@@ -6,8 +6,6 @@
 function Path() {
   this.maze = null;
 
-  this.openArea = [];
-  this.closeArea = {};
   this.cache = {};
   this.entranceNode = null;
   this.exitNode = null;
@@ -15,6 +13,7 @@ function Path() {
   this.manuallySolved = false;
   this.aStarPath = [];
   this.manualPath = [];
+  this.astar = null;
 
   this.onUpdateUI = null;
   this.onPathComplete = null;
@@ -28,28 +27,11 @@ Path.prototype = {
   },
 
   pathComplete: function () {
-    if (this.pathFound()) {
+    if (this.astar != null && this.astar.isFound()) {
       //park the marker on the exit, under the exit square
       this.stepNode = this.exitNode;
-
-      //full A* path
-      this.aStarPath.push({
-        row: this.exitNode.row,
-        col: this.exitNode.col,
-      });
-
-      var node = this.exitNode.prev;
-      while (node !== this.entranceNode) {
-        this.aStarPath.push({
-          row: node.row,
-          col: node.col,
-        });
-        node = node.prev;
-      }
-      this.aStarPath.push({
-        row: this.entranceNode.row,
-        col: this.entranceNode.col,
-      });
+      //AStar returns the route from entrance to exit
+      this.aStarPath = this.astar.getRoute() || [];
     }
 
     //refresh the UI
@@ -67,10 +49,9 @@ Path.prototype = {
     this.exitNode = null;
     this.stepNode = null;
     this.manuallySolved = false;
-    this.openArea = [];
-    this.closeArea = {};
     this.aStarPath = [];
     this.manualPath = [];
+    this.astar = null;
 
     if (maze != null) {
       this.maze = maze;
@@ -110,26 +91,49 @@ Path.prototype = {
 
     this.aStarPath = [];
 
-    //reset the temp variables
-    this.openArea = [];
-    this.closeArea = {};
-
-    /* start */
-    this.neighboursIntoOpenArea(this.entranceNode);
-    if (this.openArea.length == 0) {
-      return;
-    }
+    //the maze-specific part of the search lives here, in the adapter:
+    //how to reach neighbours, what a step costs, and how far a cell
+    //looks from the exit. AStar itself knows none of this.
+    this.astar = new AStar(
+      this.entranceNode,
+      this.exitNode,
+      function (node) {
+        var neighbors = [];
+        for (var i = 0; i < node.neighbors.length; i++) {
+          neighbors.push(
+            that.getNode(node.neighbors[i].row, node.neighbors[i].col),
+          );
+        }
+        return neighbors;
+      },
+      {
+        getCost: function () {
+          return 10;
+        },
+        getHeuristic: function (node, goal) {
+          return Math.round(
+            Math.sqrt(
+              Math.pow((goal.col - node.col) * 10, 2) +
+                Math.pow((goal.row - node.row) * 10, 2),
+            ),
+          );
+        },
+        getKey: function (node) {
+          return node.id;
+        },
+      },
+    );
+    this.astar.init();
 
     //search until reach the end node
     if (Config.Path.stepDelay == 0) {
       //run to the end
-      while (!this.pathFound()) {
-        this.stepNode = this.getOpenNodeWithMinF();
+      while (!this.astar.isFound()) {
+        this.stepNode = this.astar.step();
         if (!this.stepNode) {
           //no more nodes in the open list
           break;
         }
-        this.neighboursIntoOpenArea(this.stepNode);
       }
 
       //already reach the exit
@@ -139,10 +143,9 @@ Path.prototype = {
       function runStep() {
         if (Config.Path.stepDelay > 0) {
           //path step may be turned off any time during the timer
-          if (!that.pathFound()) {
-            that.stepNode = that.getOpenNodeWithMinF();
+          if (!that.astar.isFound()) {
+            that.stepNode = that.astar.step();
             if (that.stepNode) {
-              that.neighboursIntoOpenArea(that.stepNode);
               that.updateUI();
               setTimeout(runStep, Config.Path.stepDelay);
             }
@@ -158,67 +161,6 @@ Path.prototype = {
 
   getNode: function (row, col) {
     return this.cache["row_" + row + "_col_" + col];
-  },
-
-  getF: function (prvNode, crtNode) {
-    var targetDistanceX = (this.exitNode.col - crtNode.col) * 10;
-    var targetDistanceY = (this.exitNode.row - crtNode.row) * 10;
-    var h = Math.round(
-      Math.sqrt(Math.pow(targetDistanceX, 2) + Math.pow(targetDistanceY, 2)),
-    );
-
-    var g = prvNode.col == crtNode.col || prvNode.row == crtNode.row ? 10 : 14;
-
-    if (prvNode.fObj) g = prvNode.fObj.G + g;
-    return {
-      F: h + g,
-      H: h,
-      G: g,
-    };
-  },
-
-  inOpenArea: function (node) {
-    //check if the node exists in the open area
-    var openArea = this.openArea;
-    for (var i = 0, l = openArea.length; i < l; i++) {
-      if (openArea[i].id === node.id) return openArea[i];
-    }
-
-    return null;
-  },
-
-  neighboursIntoOpenArea: function (node) {
-    for (var i = 0; i < node.neighbors.length; i++) {
-      var position = node.neighbors[i];
-      var neighborNode = this.getNode(position.row, position.col);
-      if (!this.closeArea[neighborNode.id]) {
-        var fObj = this.getF(node, neighborNode);
-        // to the around node, if it exists in open area, get the new G value for it; if the new G is smaller, change its parent to current node
-        var tmpNode = this.inOpenArea(neighborNode);
-        if (tmpNode) {
-          if (tmpNode.fObj.G <= fObj.G) continue;
-        }
-        neighborNode.fObj = fObj;
-        neighborNode.prev = node;
-        this.openArea.push(neighborNode);
-      }
-    }
-  },
-
-  getOpenNodeWithMinF: function () {
-    //get the node with smallest F from the open list; and move it to the close list
-    if (this.openArea.length == 0) {
-      return null;
-    }
-    this.sortOpenArea();
-    this.closeArea[this.openArea[0].id] = this.openArea[0];
-    return this.openArea.shift();
-  },
-
-  sortOpenArea: function () {
-    this.openArea.sort(function (objF, objN) {
-      return objF.fObj.F - objN.fObj.F;
-    });
   },
 
   /* Begin: public methods */
@@ -271,19 +213,19 @@ Path.prototype = {
 
     context.save();
 
-    if (Config.Path.stepDelay > 0) {
+    if (Config.Path.stepDelay > 0 && this.astar != null) {
       //close area
       context.beginPath();
-      for (var key in this.closeArea) {
-        drawRectangle(context, this.closeArea[key], cellSize, false);
+      for (var i = 0; i < this.astar.closeArea.length; i++) {
+        drawRectangle(context, this.astar.closeArea[i], cellSize, false);
       }
       context.fillStyle = Config.Path.closeAreaColor;
       context.fill();
 
       //open area
       context.beginPath();
-      for (var i = 0; i < this.openArea.length; i++) {
-        drawRectangle(context, this.openArea[i], cellSize, false);
+      for (var i = 0; i < this.astar.openArea.length; i++) {
+        drawRectangle(context, this.astar.openArea[i], cellSize, false);
       }
       context.fillStyle = Config.Path.openAreaColor;
       context.fill();
@@ -365,7 +307,7 @@ Path.prototype = {
   },
 
   pathFound: function () {
-    return this.exitNode != null && this.closeArea[this.exitNode.id];
+    return this.astar != null && this.astar.isFound();
   },
 
   getPathLength: function () {
@@ -402,9 +344,8 @@ Path.prototype = {
     this.exitNode = this.getNode(row2, col2);
     this.stepNode = this.getNode(row1, col1);
     this.manuallySolved = false;
-    this.openArea = [];
-    this.closeArea = {};
     this.aStarPath = [];
+    this.astar = null;
     //the manual trail starts at the entrance, before the first step
     this.manualPath = [
       { row: this.entranceNode.row, col: this.entranceNode.col },
@@ -442,8 +383,6 @@ function AStarNode(row, col) {
   this.row = row;
   this.col = col;
   this.id = "row_" + row + "_col_" + col;
-  this.prev = null;
-  this.fObj = null;
   //the neighbour nodes which can be accessed, item example {row: 10, col: 12}
   this.neighbors = [];
 }
