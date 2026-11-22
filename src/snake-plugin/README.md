@@ -19,9 +19,11 @@ Switching to Snake sets `#snake` in the URL. Refreshing opens a fresh Snake game
 
 ## Play
 
-Choose a board size from **XS** through **XL**; the default is **M**, and Snake remembers its choice separately from Maze. Choose **Walls** to end the game at an edge, or **Wrap around** to emerge on the opposite edge. Snake remembers the edge setting, too. Both settings can be changed before starting or after a game ends, but are locked while playing or paused. Use Start and Pause/Resume, and steer with arrow keys or a mouse/touch swipe. Reset clears the game and returns it to Ready without starting; it keeps your settings. Eating food grows the snake and adds one point; hitting its body ends the game. Game over is shown on the board. Filling the board wins.
+Choose a board size from **XS** through **XL**; the default is **M**, and Snake remembers its choice separately from Maze. Choose **Walls** to end the game at an edge, or **Wrap around** to emerge on the opposite edge. Snake remembers the edge setting, too. Both settings can be changed before starting or after a game ends, but are locked while playing or paused. Use Start and Pause/Resume, and steer with arrow keys or a mouse/touch swipe. Reset is available while paused or after the game ends; it returns to Ready and keeps your settings. Eating food grows the snake and adds one point; hitting its body ends the game. Game over is shown on the board. Filling the board wins.
 
 Press **Space** to start, pause, or resume.
+Food appears when the game starts and is hidden again after Reset.
+In Walls mode, a dark border marks the edge of the board.
 
 Choose **SLOW**, **NORMAL**, or **FAST** speed at any time, including during play. Snake remembers the selected speed separately.
 

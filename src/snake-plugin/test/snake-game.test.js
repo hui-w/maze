@@ -99,12 +99,22 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   assert.equal(game.sizeButtons.S["aria-pressed"], "false");
   assert.ok(game.sizeButtons.M.hasClassName("selected"));
   assert.equal(game.sizeButtons.XXS, undefined);
+  assert.equal(game.resetButton.disabled, true);
+  let foodDraws = 0;
+  const borders = [];
   const canvas = {
     save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {},
-    fillRect() {}, arc() {}, fill() {},
+    fillRect() {}, arc() { foodDraws++; }, fill() {},
+    strokeRect(x, y, width, height) {
+      borders.push({ x, y, width, height, color: this.strokeStyle, lineWidth: this.lineWidth });
+    },
   };
   game.draw(canvas, 10);
   assert.deepEqual(messages, [{ text: "Ready", width: 320, height: 320 }]);
+  assert.equal(foodDraws, 0);
+  assert.deepEqual(borders[0], {
+    x: 0.5, y: 0.5, width: 319, height: 319, color: "#0B4F33", lineWidth: 1,
+  });
   let prevented = 0;
   const space = (repeat = false) => game.handleInput({
     type: "keydown",
@@ -115,31 +125,54 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   const beforeStart = redraws;
   space();
   assert.equal(game.state, "playing");
+  assert.equal(game.resetButton.disabled, true);
+  game.resetButton.onclick();
+  assert.equal(game.state, "playing");
   assert.equal(timers.size, 1);
   assert.equal(redraws, beforeStart + 1);
   game.draw(canvas, 10);
   assert.equal(messages.length, 1);
+  assert.equal(foodDraws, 1);
   space(true);
   assert.equal(game.state, "playing");
   assert.equal(timers.size, 1);
   space();
   assert.equal(game.state, "paused");
+  assert.equal(game.resetButton.disabled, false);
   assert.equal(timers.size, 0);
+  game.draw(canvas, 10);
+  assert.equal(foodDraws, 2);
   space();
   assert.equal(game.state, "playing");
+  assert.equal(game.resetButton.disabled, true);
   assert.equal(timers.size, 1);
   assert.equal(prevented, 4);
-  game.reset();
-  game.state = "lost";
+  game.snake.step = () => "lost";
+  const lostTimer = timers.get(game.timer);
+  timers.delete(game.timer);
+  lostTimer.callback();
+  assert.equal(game.resetButton.disabled, false);
   space();
   assert.equal(game.state, "lost");
   assert.equal(timers.size, 0);
   game.draw(canvas, 10);
   assert.deepEqual(messages.at(-1), { text: "Game Over", width: 320, height: 320 });
+  assert.equal(foodDraws, 3);
   game.resetButton.onclick();
   assert.equal(game.state, "ready");
+  assert.equal(game.resetButton.disabled, true);
   game.draw(canvas, 10);
   assert.deepEqual(messages.at(-1), { text: "Ready", width: 320, height: 320 });
+  assert.equal(foodDraws, 3);
+  game.start();
+  game.snake.step = () => "won";
+  const wonTimer = timers.get(game.timer);
+  timers.delete(game.timer);
+  wonTimer.callback();
+  assert.equal(game.state, "won");
+  assert.equal(game.resetButton.disabled, false);
+  game.resetButton.onclick();
+  assert.equal(game.state, "ready");
   assert.ok(game.speedButtons.NORMAL.hasClassName("selected"));
   game.sizeButtons.S.onclick();
   assert.equal(game.size, 24);
@@ -149,6 +182,9 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   game.edgeButtons["Wrap around"].onclick();
   assert.equal(game.snake.wrap, true);
   assert.equal(settings.get("snake.edges"), "Wrap around");
+  const borderCount = borders.length;
+  game.draw(canvas, 10);
+  assert.equal(borders.length, borderCount);
   game.start();
   assert.equal(game.state, "playing");
   assert.ok(game.edgeButtons.Walls.hasClassName("disabled"));
@@ -193,6 +229,7 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   assert.equal(timers.get(game.timer).delay, 250);
   game.handleInput({ type: "pointerdown", pointerId: 2, clientX: 0, clientY: 0 });
   game.snake.score = 3;
+  game.pause();
   game.resetButton.onclick();
   assert.equal(game.state, "ready");
   assert.equal(game.snake.score, 0);

@@ -95,6 +95,9 @@ class SnakeGame {
     controls.setEnabled(
       this.pauseButton, this.state == "playing" || this.state == "paused",
     );
+    controls.setEnabled(
+      this.resetButton, this.state == "paused" || this.state == "lost" || this.state == "won",
+    );
     this.pauseButton.textContent = this.state == "paused" ? "Resume" : "Pause";
     const settingsEnabled = this.state != "playing" && this.state != "paused";
     const buttons = [...Object.values(this.sizeButtons), ...Object.values(this.edgeButtons)];
@@ -233,7 +236,7 @@ class SnakeGame {
         cellSize - 2 * padding,
       );
     });
-    if (this.snake.food) {
+    if (this.state != "ready" && this.snake.food) {
       context.fillStyle = "#d94530";
       context.beginPath();
       context.arc(
@@ -244,6 +247,12 @@ class SnakeGame {
         Math.PI * 2,
       );
       context.fill();
+    }
+    if (!this.snake.wrap) {
+      const edge = Math.round(this.size * cellSize) - 1;
+      context.strokeStyle = "#0B4F33";
+      context.lineWidth = 1;
+      context.strokeRect(0.5, 0.5, edge, edge);
     }
     if (this.state == "ready" || this.state == "lost") {
       const message = this.state == "ready" ? "Ready" : "Game Over";
