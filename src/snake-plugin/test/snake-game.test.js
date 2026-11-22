@@ -12,6 +12,7 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   let registered;
   let captured = false;
   let redraws = 0;
+  let paletteOpens = 0;
   class Element {
     constructor() {
       this.children = [];
@@ -81,7 +82,7 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   const Toolbar = vm.runInContext("Toolbar", context);
   const host = {
     toolbar: new Element(),
-    controls: new Toolbar(),
+    controls: new Toolbar(() => { paletteOpens++; }),
     canvas: {
       setPointerCapture() { captured = true; },
       hasPointerCapture() { return captured; },
@@ -209,7 +210,12 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   assert.ok(game.speedButtons.FAST.hasClassName("selected"));
   const footer = host.toolbar.children.at(-1);
   assert.equal(footer.className, "toolbar-footer");
-  assert.equal(footer.children[0].textContent, "Copyright \u00A9 QLike.com");
+  assert.equal(footer.children[0].textContent, "Copyright \u00A9 ");
+  const paletteButton = footer.children[0].children[0];
+  assert.equal(paletteButton.tag, "button");
+  assert.equal(paletteButton.textContent, "QLike.com");
+  paletteButton.onclick();
+  assert.equal(paletteOpens, 1);
   assert.equal(footer.children[1].textContent, "Back to Home");
   footer.children[1].onclick();
   assert.equal(host.selectedGame, "maze");

@@ -95,6 +95,13 @@ a {
   justify-content: space-between;
   align-items: center;
 }
+.toolbar .toolbar-footer .copyright-link,
+.toolbar .toolbar-footer .copyright-link:hover {
+  padding: 0;
+  color: inherit;
+  cursor: default;
+  text-decoration: none;
+}
 .about-overlay {
   position: fixed;
   top: 0;

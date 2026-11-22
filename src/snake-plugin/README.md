@@ -11,7 +11,7 @@ npm run build:snake
 npm run serve
 ```
 
-Open the release page, double-click the QLike logo, and enter `snake`. Enter `maze` in the same palette to return to a fresh maze. A normal `npm run build` does not include Snake.
+Open the release page, click or tap **QLike.com** in the footer, and enter `snake`. Enter `maze` in the same palette to return to a fresh maze. A normal `npm run build` does not include Snake.
 Use **Back to Home** in Snake's footer to return to a fresh Maze game.
 
 The unminified `src/index.html` page already includes Snake and can also be opened directly as a file.

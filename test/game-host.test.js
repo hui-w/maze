@@ -22,14 +22,19 @@ test("host replaces games, dispatches input, and cleans up", () => {
       this.children = [];
       this.style = {};
       this.listeners = {};
+      this.classList = { add() {}, toggle() {}, contains() { return false; } };
     }
-    createChild(tag, attributes) {
+    createChild(tag, attributes, text) {
       const child = new Element();
       child.tag = tag;
       child.attributes = attributes || {};
+      child.textContent = text || "";
       child.parentNode = this;
       this.children.push(child);
       return child;
+    }
+    setAttribute(name, value) {
+      this.attributes[name] = value;
     }
     get firstChild() {
       return this.children[0];
@@ -65,8 +70,7 @@ test("host replaces games, dispatches input, and cleans up", () => {
   const context = load({
     document,
     window: { devicePixelRatio: 2 },
-    Toolbar: class {},
-    createChild(parent, tag, attributes) { return parent.createChild(tag, attributes); },
+    createChild(parent, tag, attributes, text) { return parent.createChild(tag, attributes, text); },
     setInterval(callback) {
       intervals.set(1, callback);
       return 1;
@@ -74,7 +78,7 @@ test("host replaces games, dispatches input, and cleans up", () => {
     clearInterval(id) {
       intervals.delete(id);
     },
-  }, "game-host.js");
+  }, "toolbar.js", "game-host.js");
   const GameHost = vm.runInContext("GameHost", context);
   const parent = new Element();
   document.body = parent;
@@ -85,6 +89,7 @@ test("host replaces games, dispatches input, and cleans up", () => {
     }
     init() {
       this.host.resizeCanvas();
+      this.host.controls.footer(this.host.toolbar, "About", () => {});
     }
     getGridSize() {
       return { rows: 10, cols: 20 };
@@ -146,7 +151,12 @@ test("host replaces games, dispatches input, and cleans up", () => {
   assert.equal(modalClosed, true);
   assert.equal(document.activeElement, previousFocus);
 
-  host.logo.listeners.dblclick();
+  const paletteButton = host.toolbar.children[1].children[0].children[0];
+  assert.equal(paletteButton.tag, "button");
+  assert.equal(paletteButton.textContent, "QLike.com");
+  assert.equal(paletteButton.attributes["aria-label"], "QLike.com, open command palette");
+  assert.equal(host.logo.listeners.dblclick, undefined);
+  paletteButton.onclick();
   assert.ok(events.some((event) => event[0] == "suspend" && event[1] == first));
   host.showUnknownCommand("missing");
   assert.equal(host.palette.controls[0].value, "missing");
@@ -177,7 +187,7 @@ test("host replaces games, dispatches input, and cleans up", () => {
   assert.equal(host.palette, null);
   assert.equal(host.game, first);
 
-  host.logo.listeners.dblclick();
+  paletteButton.onclick();
   dialog = host.palette.overlay.children[0];
   host.palette.controls[0].value = "  MAZE  ";
   dialog.onsubmit({ preventDefault() {} });

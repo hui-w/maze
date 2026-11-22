@@ -9,7 +9,7 @@ class GameHost {
   constructor(parent) {
     this.root = createChild(parent, "div", { id: "game-root" });
     this.game = null;
-    this.controls = new Toolbar();
+    this.controls = new Toolbar(() => this.openPalette());
     this.games = new Map();
     this.palette = null;
     this.modal = null;
@@ -116,8 +116,6 @@ class GameHost {
       style: "margin: 0 0 6px 0",
       alt: "QLike",
     });
-    this.logo.addEventListener("dblclick", () => this.openPalette());
-
     this.game = new GameClass(this);
     this.game.init();
     return this.game;

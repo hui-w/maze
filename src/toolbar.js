@@ -4,6 +4,10 @@
  * @licence MIT
  */
 class Toolbar {
+  constructor(openPalette) {
+    this.openPalette = openPalette;
+  }
+
   element(parent, text, highlight, handler) {
     let element;
     if (text == "|") {
@@ -50,7 +54,10 @@ class Toolbar {
 
   footer(parent, label, handler) {
     const footer = createChild(parent, "div", { class: "toolbar-footer" });
-    createChild(footer, "span", null, "Copyright \u00A9 QLike.com");
+    const copyright = createChild(footer, "span", null, "Copyright \u00A9 ");
+    const paletteButton = this.element(copyright, "QLike.com", false, this.openPalette);
+    paletteButton.classList.add("copyright-link");
+    paletteButton.setAttribute("aria-label", "QLike.com, open command palette");
     return this.element(footer, label, false, handler);
   }
 
