@@ -14,7 +14,7 @@ const GameState = {
 class MazeGame {
   constructor(host) {
     this.host = host;
-    const size = Config.MazeSize[Config.Game.defaultSize];
+    const size = MazeConfig.GridSize[MazeConfig.Game.defaultSize];
     this.maze = new Maze(size, size);
     this.path = new MazePath();
     this.state = GameState.Setup;
@@ -36,17 +36,19 @@ class MazeGame {
 
   init() {
     const that = this;
-    this.selectedSize = this.loadSetting(
+    this.selectedSize = loadGameSetting(
+      "maze",
       "size",
-      Config.MazeSize,
-      Config.Game.defaultSize,
+      MazeConfig.GridSize,
+      MazeConfig.Game.defaultSize,
     );
-    this.selectedAnimationDelay = this.loadSetting(
+    this.selectedAnimationDelay = loadGameSetting(
+      "maze",
       "animationDelay",
-      Config.AnimationDelay.MazeGeneration,
-      Config.Game.defaultAnimationDelay,
+      MazeConfig.AnimationDelay.MazeGeneration,
+      MazeConfig.Game.defaultAnimationDelay,
     );
-    const size = Config.MazeSize[this.selectedSize];
+    const size = MazeConfig.GridSize[this.selectedSize];
     this.maze.resize(size, size);
     this.render();
 
@@ -87,13 +89,8 @@ class MazeGame {
     const s = this.state;
     this.statusElement.innerHTML = s + "<span></span>";
     this.updateProgress();
-    const setEnabled = (element, enabled) => {
-      if (enabled) {
-        element.removeClassName("disabled");
-      } else {
-        element.addClassName("disabled");
-      }
-    };
+    const setEnabled = (element, enabled) =>
+      this.host.controls.setEnabled(element, enabled);
     for (let i = 0; i < this.settingControls.length; i++) {
       //only locked while an animation is running
       setEnabled(
@@ -136,7 +133,7 @@ class MazeGame {
     //no entrance yet (Setup / Generating): getStepCount is null, and
     //Steps is not applicable, like Path Length before an auto solve
     const stepCount = this.path.getStepCount();
-    $("counter-steps").innerHTML = stepCount == null ? "N/A" : stepCount;
+    this.stepsElement.textContent = stepCount == null ? "N/A" : stepCount;
     this.pathLengthElement.innerHTML = this.autoPath
       ? this.path.getPathLength()
       : "N/A";
@@ -145,7 +142,7 @@ class MazeGame {
   render() {
     this.bindPointer();
     this.host.resizeCanvas();
-    this.renderToolbar(this.host.root);
+    this.renderToolbar(this.host.toolbar);
   }
 
   handleInput(e) {
@@ -158,81 +155,54 @@ class MazeGame {
     }
   }
 
-  renderToolbar(parent) {
+  renderToolbar(tools) {
     const that = this;
 
-    //tool bar container
-    const tools = parent.createChild("div", {
-      style: "padding:" + Config.Game.padding + "px;",
-      class: "toolbar",
-    });
-    tools.createChild("img", {
-      src: "static/logo.png",
-      width: 100,
-      style: "margin: 0 0 6px 0",
-    });
-    tools.createChild(
+    createChild(tools,
       "div",
       { class: "toolbar-subtitle" },
       "A JavaScript maze game using Prim's algorithm for maze generation and A* for path finding.",
     );
-    this.statusElement = this.newToolElement(
-      this.newToolElement(tools, "|", false, null),
+    this.statusElement = this.host.controls.element(
+      this.host.controls.element(tools, "|", false, null),
       "",
       true,
       null,
     );
 
     //separator
-    this.newToolElement(tools, "-", false, null);
+    this.host.controls.element(tools, "-", false, null);
 
     //animation delays (applies to both maze generation and path finding)
-    let line = this.newToolElement(tools, "|", false, null);
-    this.newToolElement(line, "Animation: ", false, null);
-    const animationDelays = Object.keys(Config.AnimationDelay.MazeGeneration);
-    for (let i = 0; i < animationDelays.length; i++) {
-      if (i > 0) {
-        this.newToolElement(line, " ", false, null);
-      }
-      this.animationDelayButtons[animationDelays[i]] = this.newToolElement(
-        line,
-        animationDelays[i],
-        false,
-        ((animationDelay) => () => {
-          that.setAnimationDelay(animationDelay);
-          that.saveSetting("animationDelay", animationDelay);
-        })(animationDelays[i]),
-      );
-      this.animationDelayButtons[animationDelays[i]].addClassName("option");
-      this.settingControls.push(this.animationDelayButtons[animationDelays[i]]);
-    }
+    this.animationDelayButtons = this.host.controls.options(
+      tools,
+      "Animation: ",
+      MazeConfig.AnimationDelay.MazeGeneration,
+      this.selectedAnimationDelay,
+      (animationDelay) => {
+        that.setAnimationDelay(animationDelay);
+        saveGameSetting("maze", "animationDelay", animationDelay);
+      },
+    );
+    this.settingControls.push(...Object.values(this.animationDelayButtons));
 
     //maze size
-    line = this.newToolElement(tools, "|", false, null);
-    this.newToolElement(line, "Maze Size: ", false, null);
-    const sizes = Object.keys(Config.MazeSize);
-    for (let i = 0; i < sizes.length; i++) {
-      if (i > 0) {
-        this.newToolElement(line, " ", false, null);
-      }
-      this.sizeButtons[sizes[i]] = this.newToolElement(
-        line,
-        sizes[i],
-        false,
-        ((size) => () => {
-          that.resizeMaze(size);
-          that.saveSetting("size", size);
-        })(sizes[i]),
-      );
-      this.sizeButtons[sizes[i]].addClassName("option");
-      this.settingControls.push(this.sizeButtons[sizes[i]]);
-    }
+    this.sizeButtons = this.host.controls.options(
+      tools,
+      "Maze Size: ",
+      MazeConfig.GridSize,
+      this.selectedSize,
+      (size) => {
+        that.resizeMaze(size);
+        saveGameSetting("maze", "size", size);
+      },
+    );
+    this.settingControls.push(...Object.values(this.sizeButtons));
     this.setAnimationDelay(this.selectedAnimationDelay);
-    this.markSelected(this.sizeButtons, this.selectedSize);
 
     //generate
-    line = this.newToolElement(tools, "|", false, null);
-    this.generateButton = this.newToolElement(
+    let line = this.host.controls.element(tools, "|", false, null);
+    this.generateButton = this.host.controls.element(
       line,
       "Generate Maze",
       false,
@@ -240,8 +210,8 @@ class MazeGame {
         that.resetMaze();
       },
     );
-    this.newToolElement(line, " | ", false, null);
-    this.randomButton = this.newToolElement(
+    this.host.controls.element(line, " | ", false, null);
+    this.randomButton = this.host.controls.element(
       line,
       "New Entrance & Exit",
       false,
@@ -251,32 +221,32 @@ class MazeGame {
     );
 
     //move, show path and counter stay hidden until the first maze is generated
-    const part = tools.createChild("div", {
+    const part = createChild(tools, "div", {
       style: "display:none",
     });
     this.playPart = part;
 
     //separator
-    this.newToolElement(part, "-", false, null);
+    this.host.controls.element(part, "-", false, null);
 
     //find the route: by hand or by computer
-    this.newToolElement(
-      this.newToolElement(part, "|", false, null),
+    this.host.controls.element(
+      this.host.controls.element(part, "|", false, null),
       "Solve the maze",
       true,
       null,
     );
 
     //by hand
-    this.newToolElement(
-      this.newToolElement(part, "|", false, null),
+    this.host.controls.element(
+      this.host.controls.element(part, "|", false, null),
       "&nbsp;&nbsp;Manual - use arrow keys or swipe",
       false,
       null,
     );
-    line = this.newToolElement(part, "|", false, null);
-    this.newToolElement(line, "&nbsp;&nbsp;&nbsp;&nbsp;Steps: ", false, null);
-    line.createChild(
+    line = this.host.controls.element(part, "|", false, null);
+    this.host.controls.element(line, "&nbsp;&nbsp;&nbsp;&nbsp;Steps: ", false, null);
+    this.stepsElement = createChild(line,
       "span",
       {
         id: "counter-steps",
@@ -286,9 +256,9 @@ class MazeGame {
     );
 
     //by computer
-    line = this.newToolElement(part, "|", false, null);
-    this.newToolElement(line, "&nbsp;&nbsp;Automatic - ", false, null);
-    this.pathButton = this.newToolElement(
+    line = this.host.controls.element(part, "|", false, null);
+    this.host.controls.element(line, "&nbsp;&nbsp;Automatic - ", false, null);
+    this.pathButton = this.host.controls.element(
       line,
       "Show Path",
       false,
@@ -296,14 +266,14 @@ class MazeGame {
         that.getPath();
       },
     );
-    line = this.newToolElement(part, "|", false, null);
-    this.newToolElement(
+    line = this.host.controls.element(part, "|", false, null);
+    this.host.controls.element(
       line,
       "&nbsp;&nbsp;&nbsp;&nbsp;Path Length: ",
       false,
       null,
     );
-    this.pathLengthElement = line.createChild(
+    this.pathLengthElement = createChild(line,
       "span",
       {
         class: "highlighted",
@@ -311,34 +281,34 @@ class MazeGame {
       "N/A",
     );
 
-    //footer: copyright and about
-    const footer = tools.createChild("div", {
-      class: "toolbar-footer",
-    });
-    footer.createChild("span", null, "Copyright \u00A9 QLike.com");
-    this.newToolElement(footer, "About", false, () => {
+    this.host.controls.footer(tools, "About", () => {
       that.showAbout();
     });
   }
 
   /* modal dialog describing the game */
   showAbout() {
-    if ($("about-overlay")) {
+    if (this.closeAbout || this.host.modal) {
       return;
     }
-    const overlay = document.body.createChild("div", {
+    const overlay = createChild(document.body, "div", {
       id: "about-overlay",
       class: "about-overlay",
     });
-    const dialog = overlay.createChild("div", { class: "about-dialog" });
-    dialog.createChild("h2", null, "About this Maze Game");
-    dialog.createChild(
+    const dialog = createChild(overlay, "div", {
+      class: "about-dialog",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": "about-title",
+    });
+    createChild(dialog, "h2", { id: "about-title" }, "About this Maze Game");
+    createChild(dialog,
       "p",
       null,
       "This game is a JavaScript implementation of maze generation and A* path finding, drawn on an HTML5 canvas.",
     );
-    dialog.createChild("h3", null, "Maze generation");
-    dialog.createChild(
+    createChild(dialog, "h3", null, "Maze generation");
+    createChild(dialog,
       "p",
       null,
       "The maze is a grid of cells separated by walls, all closed at the start. " +
@@ -347,8 +317,8 @@ class MazeGame {
         "the wall is discarded to avoid a loop. Otherwise the wall is opened and the walls of the newly connected cell join the list. " +
         "The result is a perfect maze: it has no loops and no isolated areas, so there is exactly one route between any two cells.",
     );
-    dialog.createChild("h3", null, "Path finding (A*)");
-    dialog.createChild(
+    createChild(dialog, "h3", null, "Path finding (A*)");
+    createChild(dialog,
       "p",
       null,
       "A* always expands the most promising node, scored as F = G + H. G is the cost of the route from the entrance to the node, " +
@@ -356,122 +326,45 @@ class MazeGame {
         "When the exit is reached, the route is traced back to the entrance through the parent links. " +
         "Turn on the animation to watch the open and closed areas spread.",
     );
-    dialog.createChild("h3", null, "Source and feedback");
-    dialog.createChild(
+    createChild(dialog, "h3", null, "Source and feedback");
+    createChild(dialog,
       "p",
       null,
       'GitHub: <a href="https://github.com/hui-w/maze" target="_blank">https://github.com/hui-w/maze</a><br>' +
         'Feedback: <a href="mailto:webmaster@qlike.com">webmaster@qlike.com</a>',
     );
-    const close = () => {
-      document.removeEventListener("keydown", onKey, false);
-      document.body.removeChild(overlay);
-      this.closeAbout = null;
-    };
+    const close = () => this.host.closeModal();
     this.closeAbout = close;
-    const onKey = (e) => {
-      if (e.keyCode == 27) {
-        close();
-      }
-    };
-    document.addEventListener("keydown", onKey, false);
     overlay.onclick = (e) => {
       if (e.target == overlay) {
         close();
       }
     };
-    const button = dialog.createChild("div", { class: "about-actions" });
-    const closeButton = button.createChild(
-      "span",
-      { class: "toolbar-linkbutton about-close" },
+    const button = createChild(dialog, "div", { class: "about-actions" });
+    const closeButton = createChild(button,
+      "button",
+      { type: "button", class: "toolbar-linkbutton about-close" },
       "Close",
     );
     closeButton.onclick = close;
-  }
-
-  newToolElement(parent, text, highlight, handler) {
-    let element = null;
-    if (text == "|") {
-      //new line
-      element = parent.createChild("div", {
-        class: "toolbar-line",
-      });
-    } else if (text == "-") {
-      //separator line
-      element = parent.createChild("div", {
-        class: "toolbar-separator",
-      });
-    } else if (handler == null) {
-      //normal text
-      element = parent.createChild(
-        "span",
-        {
-          class: "toolbar-text",
-        },
-        text,
-      );
-    } else {
-      //link button
-      element = parent.createChild(
-        "span",
-        {
-          class: "toolbar-linkbutton",
-        },
-        text,
-      );
-      element.onclick = function (e) {
-        if (this.hasClassName("disabled") || this.hasClassName("selected")) {
-          return;
-        }
-        handler(e, this);
-      };
-    }
-    if (highlight) {
-      element.addClassName("highlighted");
-    }
-    return element;
-  }
-
-  /* localStorage may be unavailable (private mode); fall back to the default */
-  loadSetting(key, allowed, fallback) {
-    try {
-      const value = localStorage.getItem("maze." + key);
-      if (value && allowed.hasOwnProperty(value)) {
-        return value;
-      }
-    } catch (e) {}
-    return fallback;
-  }
-
-  saveSetting(key, value) {
-    try {
-      localStorage.setItem("maze." + key, value);
-    } catch (e) {}
-  }
-
-  /* the chosen option is highlighted and no longer clickable */
-  markSelected(buttons, value) {
-    for (let key in buttons) {
-      if (key == value) {
-        buttons[key].addClassName("selected");
-      } else {
-        buttons[key].removeClassName("selected");
-      }
-    }
+    this.host.openModal([...dialog.querySelectorAll("a[href]"), closeButton], () => {
+      document.body.removeChild(overlay);
+      this.closeAbout = null;
+    });
   }
 
   /* A zero delay skips animation; other options use their configured delays */
   setAnimationDelay(animationDelay) {
-    Config.Maze.stepDelay =
-      Config.AnimationDelay.MazeGeneration[animationDelay];
-    Config.Path.stepDelay = Config.AnimationDelay.PathFinding[animationDelay];
-    this.markSelected(this.animationDelayButtons, animationDelay);
+    this.maze.stepDelay =
+      MazeConfig.AnimationDelay.MazeGeneration[animationDelay];
+    this.path.stepDelay = MazeConfig.AnimationDelay.PathFinding[animationDelay];
+    this.host.controls.markSelected(this.animationDelayButtons, animationDelay);
   }
 
   resizeMaze(size) {
-    const n = Config.MazeSize[size];
+    const n = MazeConfig.GridSize[size];
     this.maze.resize(n, n);
-    this.markSelected(this.sizeButtons, size);
+    this.host.controls.markSelected(this.sizeButtons, size);
     this.host.resizeCanvas();
     this.prepareMaze();
   }
@@ -505,7 +398,10 @@ class MazeGame {
       case 40:
         this.arrowKeyStatus |= 1 << 3;
         break;
+      default:
+        return;
     }
+    e.preventDefault();
     this.startMoving();
   }
 
@@ -544,7 +440,7 @@ class MazeGame {
         if (that.arrowKeyStatus > 0) {
           that.keyboardTimer = setTimeout(
             keyboardTimerHandler,
-            Config.Game.keyboardTimerDelay,
+            MazeConfig.Game.keyboardTimerDelay,
           );
         } else {
           that.keyboardTimer = null;
@@ -573,7 +469,7 @@ class MazeGame {
       let dy = e.clientY - startY;
 
       //the press point trails behind the finger, so changing direction only needs a short drag
-      const max = Config.Game.dragThreshold * 3;
+      const max = MazeConfig.Game.dragThreshold * 3;
       if (Math.abs(dx) > max) {
         startX += dx - (dx > 0 ? max : -max);
         dx = dx > 0 ? max : -max;
@@ -585,8 +481,8 @@ class MazeGame {
 
       //stay still until the pointer has moved far enough from where it was pressed
       if (
-        Math.abs(dx) < Config.Game.dragThreshold &&
-        Math.abs(dy) < Config.Game.dragThreshold
+        Math.abs(dx) < MazeConfig.Game.dragThreshold &&
+        Math.abs(dy) < MazeConfig.Game.dragThreshold
       ) {
         that.arrowKeyStatus = 0;
         return;
@@ -604,6 +500,13 @@ class MazeGame {
         activePointer = null;
         that.stopMoving();
       }
+    };
+
+    this.resetPointer = () => {
+      if (activePointer != null && canvas.hasPointerCapture(activePointer)) {
+        canvas.releasePointerCapture(activePointer);
+      }
+      activePointer = null;
     };
 
     this.handlePointerEvent = (e) => {
@@ -671,8 +574,13 @@ class MazeGame {
     this.path.redraw(context, cellSize);
   }
 
-  destroy() {
+  suspendInput() {
+    this.resetPointer();
     this.stopMoving();
+  }
+
+  destroy() {
+    this.suspendInput();
     this.maze.cancel();
     this.path.cancel();
     if (this.closeAbout) {
@@ -707,9 +615,3 @@ class MazeGame {
     }
   }
 }
-
-let game = null;
-addEventListener("load", () => {
-  const host = new GameHost(document.body);
-  game = host.start(MazeGame);
-});

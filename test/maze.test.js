@@ -12,11 +12,10 @@ function load() {
     document: {},
   });
   context.window = context;
-  ["common.js", "config.js", "maze.js", "astar.js", "maze-path.js"].forEach(function (file) {
+  ["common.js", "maze/maze-config.js", "maze/maze.js", "astar.js", "maze/maze-path.js"].forEach(function (file) {
     const code = fs.readFileSync(path.join(__dirname, "..", "src", file), "utf8");
     vm.runInContext(code, context, { filename: file });
   });
-  vm.runInContext("Config.Maze.stepDelay = 0; Config.Path.stepDelay = 0;", context);
   //class declarations do not create properties on the global object,
   //unlike function declarations, so pull them out by name for the tests
   Object.assign(

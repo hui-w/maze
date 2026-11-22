@@ -4,8 +4,9 @@
  * @licence MIT
  */
 class MazePath {
-  constructor() {
+  constructor(stepDelay = 0) {
     this.maze = null;
+    this.stepDelay = stepDelay;
 
     this.entranceNode = null;
     this.exitNode = null;
@@ -118,7 +119,7 @@ class MazePath {
     this.astar.init();
 
     //search until reach the end node
-    if (Config.Path.stepDelay == 0) {
+    if (this.stepDelay == 0) {
       //run to the end
       while (!this.astar.isFound()) {
         this.stepNode = this.astar.step();
@@ -136,7 +137,7 @@ class MazePath {
         if (runId != that.runId) {
           return;
         }
-        if (Config.Path.stepDelay > 0) {
+        if (that.stepDelay > 0) {
           //path step may be turned off any time during the timer
           if (!that.astar.isFound()) {
             that.stepNode = that.astar.step();
@@ -146,7 +147,7 @@ class MazePath {
                 that.searchTimer = setTimeout(() => {
                   that.searchTimer = null;
                   runStep();
-                }, Config.Path.stepDelay);
+                }, that.stepDelay);
               }
             }
           } else {
@@ -223,13 +224,13 @@ class MazePath {
 
     context.save();
 
-    if (Config.Path.stepDelay > 0 && this.astar != null) {
+    if (this.stepDelay > 0 && this.astar != null) {
       //close area
       context.beginPath();
       for (let i = 0; i < this.astar.closeArea.length; i++) {
         drawRectangle(context, this.astar.closeArea[i], cellSize, false);
       }
-      context.fillStyle = Config.Path.closeAreaColor;
+      context.fillStyle = MazeConfig.Path.closeAreaColor;
       context.fill();
 
       //open area
@@ -237,7 +238,7 @@ class MazePath {
       for (let i = 0; i < this.astar.openArea.length; i++) {
         drawRectangle(context, this.astar.openArea[i], cellSize, false);
       }
-      context.fillStyle = Config.Path.openAreaColor;
+      context.fillStyle = MazeConfig.Path.openAreaColor;
       context.fill();
     }
 
@@ -259,7 +260,7 @@ class MazePath {
           context.lineTo(x, y);
         }
       }
-      context.strokeStyle = Config.Path.pathColor;
+      context.strokeStyle = MazeConfig.Path.pathColor;
       context.lineWidth = cellSize / 4;
       context.lineJoin = "round";
       context.stroke();
@@ -268,39 +269,36 @@ class MazePath {
     const markerAtExit = this.isAtExit();
     if (!markerAtExit) {
       //the player and A* search share one marker because they run in separate modes
-      context.fillStyle = Config.Path.stepColor;
+      context.fillStyle = MazeConfig.Path.stepColor;
       context.beginPath();
       drawEllipse(context, this.stepNode, cellSize, true);
       context.fill();
     }
 
     //entrance and exit
-    context.fillStyle = Config.Path.entranceColor;
+    context.fillStyle = MazeConfig.Path.entranceColor;
     context.beginPath();
     drawArrow(context, this.entranceNode, cellSize, true);
     context.fill();
 
-    context.fillStyle = Config.Path.exitColor;
+    context.fillStyle = MazeConfig.Path.exitColor;
     context.beginPath();
     drawRectangle(context, this.exitNode, cellSize, true);
     context.fill();
 
     if (markerAtExit) {
-      context.fillStyle = Config.Path.stepColor;
+      context.fillStyle = MazeConfig.Path.stepColor;
       context.beginPath();
       drawEllipse(context, this.stepNode, cellSize, true);
       context.fill();
     }
 
     if (this.manuallySolved) {
-      context.fillStyle = "#0B4F33";
-      context.font = "50px verdana";
-      context.fillTextEx(
+      drawGameMessage(
+        context,
         "Maze Solved",
-        (this.maze.cols * cellSize) / 2,
-        (this.maze.rows * cellSize) / 2,
-        "center",
-        "middle",
+        this.maze.cols * cellSize,
+        this.maze.rows * cellSize,
       );
     }
 

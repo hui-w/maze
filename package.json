@@ -1,13 +1,14 @@
 {
   "name": "maze",
-  "version": "2.0.15",
+  "version": "3.0.0",
   "description": "Maze generation and A* path finding in JavaScript",
   "private": true,
   "license": "MIT",
   "repository": "github:hui-w/maze",
   "scripts": {
     "build": "node build.js",
-    "test": "node --test \"test/*.test.js\"",
+    "build:snake": "node build.js src/snake-plugin/snake.js src/snake-plugin/snake-game.js",
+    "test": "node --test \"test/*.test.js\" \"src/snake-plugin/test/*.test.js\"",
     "serve": "python3 -m http.server 8123"
   },
   "devDependencies": {

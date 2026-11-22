@@ -54,6 +54,9 @@ a {
 }
 .toolbar .toolbar-line .toolbar-linkbutton,
 .toolbar .toolbar-footer .toolbar-linkbutton {
+  border: 0;
+  background: transparent;
+  font: inherit;
   cursor: pointer;
   color: #008049;
   display: inline-block;
@@ -71,6 +74,7 @@ a {
 }
 .toolbar .toolbar-line .toolbar-linkbutton.option {
   min-width: 18px;
+  box-sizing: content-box;
   text-align: center;
 }
 .toolbar .toolbar-line .toolbar-linkbutton.selected {
@@ -130,6 +134,8 @@ a {
   text-align: right;
 }
 .about-dialog .about-close {
+  border: 0;
+  font: inherit;
   display: inline-block;
   padding: 3px 12px;
   border-radius: 3px;
@@ -139,4 +145,56 @@ a {
 }
 .about-dialog .about-close:hover {
   background: #008049;
+}
+.command-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 79, 51, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+.command-dialog {
+  box-sizing: border-box;
+  width: min(400px, calc(100% - 32px));
+  padding: 20px 24px;
+  border-radius: 6px;
+  border-top: 4px solid #009c58;
+  background: #fffdf7;
+  color: #3b3226;
+  font-size: 13px;
+}
+.command-dialog h2 {
+  margin-bottom: 12px;
+  color: #0b4f33;
+  font-size: 18px;
+}
+.command-dialog label {
+  display: block;
+  margin-bottom: 4px;
+}
+.command-dialog input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px;
+  font: inherit;
+}
+.command-message {
+  color: #b33322;
+  margin-top: 8px;
+}
+.command-message:empty {
+  display: none;
+}
+.command-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.command-actions button {
+  padding: 4px 12px;
+  font: inherit;
+  cursor: pointer;
 }

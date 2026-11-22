@@ -8,12 +8,14 @@ const src = path.join(__dirname, "src");
 const out = path.join(__dirname, "release");
 const scripts = [
   "common.js",
-  "config.js",
-  "maze.js",
+  "maze/maze-config.js",
+  "maze/maze.js",
   "astar.js",
-  "maze-path.js",
+  "maze/maze-path.js",
+  "toolbar.js",
   "game-host.js",
-  "maze-game.js",
+  "maze/maze-game.js",
+  "app.js",
 ];
 
 async function build() {
@@ -21,6 +23,7 @@ async function build() {
 
   const code = scripts
     .map((f) => fs.readFileSync(path.join(src, f), "utf8"))
+    .concat(process.argv.slice(2).map((f) => fs.readFileSync(path.resolve(f), "utf8")))
     .join("\n");
   const result = await minify(code, {
     compress: true,

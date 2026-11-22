@@ -4,9 +4,10 @@
  * @licence MIT
  */
 class Maze {
-  constructor(rows, cols) {
+  constructor(rows, cols, stepDelay = 0) {
     this.rows = rows;
     this.cols = cols;
+    this.stepDelay = stepDelay;
     this.cells = [];
     this.walls = [];
     this.tempWalls = []; //walls to handle when generating maze
@@ -113,7 +114,7 @@ class Maze {
       this.cells[rand(0, this.cells.length - 1)],
     );
 
-    if (Config.Maze.stepDelay == 0) {
+    if (this.stepDelay == 0) {
       while (this.tempWalls.length > 0) {
         this.processRandomWall(false);
       }
@@ -131,7 +132,7 @@ class Maze {
             that.generationTimer = setTimeout(() => {
               that.generationTimer = null;
               runStep();
-            }, Config.Maze.stepDelay);
+            }, that.stepDelay);
           }
         } else {
           //end
@@ -150,7 +151,7 @@ class Maze {
     const cellB = wall.cellB;
     if (cellA.connected && cellB.connected) {
       //cells connected, remove the wall from the temp array
-      this.tempWalls.removeAt(randIdx);
+      this.tempWalls.splice(randIdx, 1);
     } else {
       //not connected, connect the cells
       wall.setOpen(true);
@@ -208,33 +209,33 @@ class Maze {
 
       if (wall.cellA.row == wall.cellB.row) {
         //vertical wall
-        context.antiFuzzyLine(x, y, x, y + cellSize);
+        antiFuzzyLine(context, x, y, x, y + cellSize);
       } else {
         //horizontal walls
-        context.antiFuzzyLine(x, y, x + cellSize, y);
+        antiFuzzyLine(context, x, y, x + cellSize, y);
       }
     }
 
     //canvas borders
-    context.antiFuzzyLine(0, 1, this.cols * cellSize, 1); //special treated for 1px line from (0, 0, this.canvas.width, 0)
-    context.antiFuzzyLine(
+    antiFuzzyLine(context, 0, 1, this.cols * cellSize, 1); //special treated for 1px line from (0, 0, this.canvas.width, 0)
+    antiFuzzyLine(context,
       this.cols * cellSize,
       0,
       this.cols * cellSize,
       this.rows * cellSize,
     );
-    context.antiFuzzyLine(
+    antiFuzzyLine(context,
       this.cols * cellSize,
       this.rows * cellSize,
       0,
       this.rows * cellSize,
     );
-    context.antiFuzzyLine(1, this.rows * cellSize, 1, 0); //special treated for 1px line from (0, this.canvas.height, 0, 0)
-    context.strokeStyle = Config.Maze.wallColor;
+    antiFuzzyLine(context, 1, this.rows * cellSize, 1, 0); //special treated for 1px line from (0, this.canvas.height, 0, 0)
+    context.strokeStyle = MazeConfig.Maze.wallColor;
     context.stroke();
 
     //temp walls
-    if (Config.Maze.stepDelay > 0) {
+    if (this.stepDelay > 0) {
       context.beginPath();
       //walls
       for (let i = 0; i < this.tempWalls.length; i++) {
@@ -245,13 +246,13 @@ class Maze {
         let y = wall.cellB.row * cellSize;
         if (wall.cellA.row == wall.cellB.row) {
           //vertical wall
-          context.antiFuzzyLine(x, y, x, y + cellSize);
+          antiFuzzyLine(context, x, y, x, y + cellSize);
         } else {
           //horizontal walls
-          context.antiFuzzyLine(x, y, x + cellSize, y);
+          antiFuzzyLine(context, x, y, x + cellSize, y);
         }
       }
-      context.strokeStyle = Config.Maze.highlightedWallColor;
+      context.strokeStyle = MazeConfig.Maze.highlightedWallColor;
       context.stroke();
 
       //cells
@@ -263,7 +264,7 @@ class Maze {
         drawRectangle(context, wall.cellA, cellSize, false);
         drawRectangle(context, wall.cellB, cellSize, false);
       }
-      context.fillStyle = Config.Maze.highlightedCellColor;
+      context.fillStyle = MazeConfig.Maze.highlightedCellColor;
       context.fill();
     }
 

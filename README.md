@@ -41,22 +41,31 @@ With animation turned on, the open and closed areas are drawn on the canvas, so 
 
 ```
 src/
-  common.js           Helpers (random numbers, DOM and canvas utilities)
-  config.js           Sizes, colours and animation delays
-  maze.js             Maze, Cell and Wall: grid model, generation and drawing
+  common.js           Explicit helpers (random numbers, DOM, storage and canvas)
   astar.js            AStar: reusable A* search, no maze or drawing knowledge
-  maze-path.js        MazePath: maze-to-AStar adapter, player movement and drawing
+  toolbar.js          Shared toolbar controls and option groups
   game-host.js        GameHost: canvas, resizing, input dispatch and game lifecycle
-  maze-game.js        MazeGame: toolbar, state machine, movement and maze rendering
+  app.js              Application startup and game registration
   web.css             Toolbar styles
+  maze/
+    maze-config.js    Maze defaults, colours and animation delays
+    maze.js           Maze, Cell and Wall: grid model, generation and drawing
+    maze-path.js      MazePath: maze-to-AStar adapter, player movement and drawing
+    maze-game.js      MazeGame: toolbar, state machine, movement and maze rendering
+  snake-plugin/       Optional Snake game, documentation and tests
 release/      Minified build served on GitHub Pages
 ```
 
 - **Maze** only knows the grid. It reports progress through the callbacks `onUpdateUI` and `onInitComplete`.
 - **MazePath** runs A* directly on the maze cells (neighbours are the cells on the other side of an open wall), and reports through `onUpdateUI` and `onPathComplete`.
 - **MazeGame** owns both. It wires up their callbacks, draws the maze and path, and drives everything through a small state machine: `Setup` → `Generating` → `Playing` → `Solving` → `Finished`. The toolbar buttons are enabled or disabled according to the current state.
-- **GameHost** owns the canvas, background, resizing and input listeners. It starts a game by constructing it with the host and calling `init()`. A game supplies `getGridSize()`, `draw(context, cellSize)`, `handleInput(event)` and `destroy()`. The host forwards keyboard and canvas pointer events to the active game; the game decides what they mean. Starting another game destroys the previous one and rebuilds the host's contents; games must cancel their timers and remove any listeners they own in `destroy()`. Games can use `host.root` for their controls, `host.canvas` for pointer capture, and request a redraw or resize using the host.
-- **Config** holds all the tunable values, so sizes, colours and delays are changed in one place.
+- **Toolbar** creates the shared controls, option groups and selection/disabled states used by Maze and Snake.
+- **GameHost** owns the canvas, background, logo, command palette, resizing and input listeners. It starts a game by constructing it with the host and calling `init()`. A game supplies `getGridSize()`, `draw(context, cellSize)`, `handleInput(event)`, `suspendInput()` and `destroy()`. The host blocks game input while a host-managed modal is open and reserves interactive controls' shortcuts, while allowing arrow keys on buttons to steer. The board can receive keyboard focus for game shortcuts. `suspendInput()` releases held input when a modal opens. Starting another game destroys the previous one and rebuilds the host's contents; games must cancel their timers and remove any listeners they own in `destroy()`. Games can use `host.toolbar` for their controls, `host.canvas` for pointer capture, and request a redraw or resize using the host.
+- **MazeConfig** holds Maze's sizes, defaults, colours and animation options. Each Maze instance owns its current animation delays. Snake keeps its own settings, while the host owns canvas settings.
+
+Double-click the logo to open the command palette. Enter `maze` to start a new maze; Escape or Cancel closes the palette without switching games. Games register with `registerGame(command, GameClass)` before the page's load event; unknown commands are not executed.
+
+The URL fragment selects the game (for example, `#snake` or `#maze`). Refreshing or using browser navigation starts the selected game from scratch. Unknown or unavailable games are reported in the command palette.
 
 ## Build
 
@@ -67,6 +76,16 @@ npm install
 npm run build
 ```
 
+To include the Snake plugin:
+
+```
+npm run build:snake
+```
+
+This appends the Snake files after the host; `npm run build` alone produces the normal Maze-only build. The build script also accepts optional plugin files in dependency order. Only include trusted code: it runs with the same page privileges as Maze.
+
+The source page uses ordered classic scripts so it also works directly with `file://`; games register with the shared `registerGame` function before the page loads.
+
 This writes `release/app.min.js`, `release/app.min.css`, `release/index.html` (from `src/index_release.html`) and `release/static/`. The `version` in `package.json` is added to the JS and CSS URLs as `?v=<version>`, so bump it for each release to refresh browser caches.
 
 ## Test
@@ -75,7 +94,7 @@ This writes `release/app.min.js`, `release/app.min.css`, `release/index.html` (f
 npm test
 ```
 
-Runs the tests in `test/` with Node's built-in test runner (Node 18 or later, no extra dependencies). They check maze generation, A* routes, host lifecycle and cancellation of animated work.
+Runs the Maze and Snake tests with Node's built-in test runner (Node 18 or later, no extra dependencies). They check maze generation, A* routes, host lifecycle, cancellation of animated work, and Snake rules.
 
 ## Run locally
 
@@ -84,6 +103,8 @@ npm run serve
 ```
 
 Then open http://localhost:8123/release/index.html (or `src/index.html` for the unminified sources).
+
+The unminified source page includes Snake directly; the release build includes it only when the plugin files are passed to the build command above.
 
 The release page skips Google Analytics on localhost, loopback addresses, and file URLs. Other hosts, including LAN addresses, still load it.
 

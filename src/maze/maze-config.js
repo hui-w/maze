@@ -3,29 +3,26 @@
  * @repo https://github.com/hui-w/maze
  * @licence MIT
  */
-const Config = {
+const MazeConfig = {
   Game: {
-    padding: 12,
-    backgroundColor: "#FFFDF7",
     keyboardTimerDelay: 200,
     dragThreshold: 12,
     defaultSize: "XS",
     defaultAnimationDelay: "FAST",
   },
-  // Maze size options: label -> cells per side
-  MazeSize: { XXS: 8, XS: 16, S: 24, M: 32, L: 48, XL: 64 },
+  GridSize: { XXS: 8, XS: 16, S: 24, M: 32, L: 48, XL: 64 },
   AnimationDelay: {
     MazeGeneration: {
       OFF: 0,
-      FAST: 8,
-      NORMAL: 32,
       SLOW: 64,
+      NORMAL: 32,
+      FAST: 8,
     },
     PathFinding: {
       OFF: 0,
-      FAST: 8,
-      NORMAL: 128,
       SLOW: 256,
+      NORMAL: 128,
+      FAST: 8,
     },
   },
   Maze: {
