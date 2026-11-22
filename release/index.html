@@ -9,14 +9,24 @@
 	<link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon" />
 	<link rel="stylesheet" type="text/css" href="app.min.css?v=2.0.15" />
 	<script type="text/javascript" src="app.min.js?v=2.0.15"></script>
-	<script async src="https://www.googletagmanager.com/gtag/js?id=G-P58ZW4448P"></script>
 	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag() {
-			dataLayer.push(arguments);
+		const hostname = window.location.hostname.replace(/\.$/, "");
+		const isLocal = window.location.protocol === "file:" ||
+			hostname === "localhost" || hostname.endsWith(".localhost") ||
+			hostname.startsWith("127.") || hostname === "[::1]";
+		if (!isLocal) {
+			window.dataLayer = window.dataLayer || [];
+			function gtag() {
+				window.dataLayer.push(arguments);
+			}
+			gtag("js", new Date());
+			gtag("config", "G-P58ZW4448P");
+
+			const script = document.createElement("script");
+			script.async = true;
+			script.src = "https://www.googletagmanager.com/gtag/js?id=G-P58ZW4448P";
+			document.head.appendChild(script);
 		}
-		gtag("js", new Date());
-		gtag("config", "G-P58ZW4448P");
 	</script>
 </head>
 <body>

@@ -41,19 +41,21 @@ With animation turned on, the open and closed areas are drawn on the canvas, so 
 
 ```
 src/
-  common.js   Helpers (random numbers, DOM and canvas utilities)
-  config.js   Sizes, colours and animation delays
-  maze.js     Maze, Cell and Wall: grid model, generation and drawing
-  astar.js    AStar: reusable A* search, no maze or drawing knowledge
-  path.js     Path: maze-to-AStar adapter, player movement and drawing
-  game.js     Game: toolbar, state machine, keyboard input and canvas
-  web.css     Toolbar styles
+  common.js           Helpers (random numbers, DOM and canvas utilities)
+  config.js           Sizes, colours and animation delays
+  maze.js             Maze, Cell and Wall: grid model, generation and drawing
+  astar.js            AStar: reusable A* search, no maze or drawing knowledge
+  maze-path.js        MazePath: maze-to-AStar adapter, player movement and drawing
+  game-host.js        GameHost: canvas, resizing, input dispatch and game lifecycle
+  maze-game.js        MazeGame: toolbar, state machine, movement and maze rendering
+  web.css             Toolbar styles
 release/      Minified build served on GitHub Pages
 ```
 
 - **Maze** only knows the grid. It reports progress through the callbacks `onUpdateUI` and `onInitComplete`.
-- **Path** runs A* directly on the maze cells (neighbours are the cells on the other side of an open wall), and reports through `onUpdateUI` and `onPathComplete`.
-- **Game** owns both. It wires up the callbacks, draws the background, maze and path to the canvas, and drives everything through a small state machine: `Setup` → `Generating` → `Playing` → `Solving` → `Finished`. The toolbar buttons are enabled or disabled according to the current state.
+- **MazePath** runs A* directly on the maze cells (neighbours are the cells on the other side of an open wall), and reports through `onUpdateUI` and `onPathComplete`.
+- **MazeGame** owns both. It wires up their callbacks, draws the maze and path, and drives everything through a small state machine: `Setup` → `Generating` → `Playing` → `Solving` → `Finished`. The toolbar buttons are enabled or disabled according to the current state.
+- **GameHost** owns the canvas, background, resizing and input listeners. It starts a game by constructing it with the host and calling `init()`. A game supplies `getGridSize()`, `draw(context, cellSize)`, `handleInput(event)` and `destroy()`. The host forwards keyboard and canvas pointer events to the active game; the game decides what they mean. Starting another game destroys the previous one and rebuilds the host's contents; games must cancel their timers and remove any listeners they own in `destroy()`. Games can use `host.root` for their controls, `host.canvas` for pointer capture, and request a redraw or resize using the host.
 - **Config** holds all the tunable values, so sizes, colours and delays are changed in one place.
 
 ## Build
@@ -73,7 +75,7 @@ This writes `release/app.min.js`, `release/app.min.css`, `release/index.html` (f
 npm test
 ```
 
-Runs the maze generation and A* tests in `test/` with Node's built-in test runner (Node 18 or later, no extra dependencies). They check that generated mazes are perfect (fully connected, no loops) for square and non-square sizes, and that A* returns a valid route.
+Runs the tests in `test/` with Node's built-in test runner (Node 18 or later, no extra dependencies). They check maze generation, A* routes, host lifecycle and cancellation of animated work.
 
 ## Run locally
 
@@ -82,6 +84,8 @@ npm run serve
 ```
 
 Then open http://localhost:8123/release/index.html (or `src/index.html` for the unminified sources).
+
+The release page skips Google Analytics on localhost, loopback addresses, and file URLs. Other hosts, including LAN addresses, still load it.
 
 ## AI assistants
 

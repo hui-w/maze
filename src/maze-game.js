@@ -11,11 +11,12 @@ const GameState = {
   Finished: "Maze solved",
 };
 
-class Game {
-  constructor() {
+class MazeGame {
+  constructor(host) {
+    this.host = host;
     const size = Config.MazeSize[Config.Game.defaultSize];
     this.maze = new Maze(size, size);
-    this.path = new Path();
+    this.path = new MazePath();
     this.state = GameState.Setup;
     this.settingControls = [];
     this.animationDelayButtons = {};
@@ -27,25 +28,14 @@ class Game {
     this.autoPath = false;
     this.playPart = null;
 
-    this.width = 0;
-    this.height = 0;
-    this.cellSize = 0;
-
-    this.canvas = null;
-    this.context = null;
-
     //from 0000 to 1111 (Keys: left-up-right-bottom)
     this.arrowKeyStatus = 0;
     this.keyboardTimer = null;
 
-    //initialize
-    this.init();
   }
 
   init() {
     const that = this;
-    this.width = document.documentElement.clientWidth;
-    this.height = document.documentElement.clientHeight;
     this.selectedSize = this.loadSetting(
       "size",
       Config.MazeSize,
@@ -153,55 +143,19 @@ class Game {
   }
 
   render() {
-    const that = this;
-
-    //create the wrapper
-    const rootElement = document.body;
-    const wrapper = rootElement.createChild("div", {
-      id: "game-wrapper",
-      style: "padding: " + Config.Game.padding + "px",
-    });
-
-    //initialize the canvas and the context
-    this.canvas = wrapper.createChild("canvas", {
-      id: "game-canvas",
-      width: 0,
-      height: 0,
-    });
-    this.context = this.canvas.getContext("2d");
     this.bindPointer();
+    this.host.resizeCanvas();
+    this.renderToolbar(this.host.root);
+  }
 
-    //calculate the grid size and canvas size
-    this.resizeCanvas();
-
-    //check if the window size is changed
-    const checkWindowsize = () => {
-      const nwidth = document.documentElement.clientWidth;
-      const nheight = document.documentElement.clientHeight;
-      if (nwidth != that.width || nheight != that.height) {
-        that.width = nwidth;
-        that.height = nheight;
-        that.resizeCanvas();
-      }
-    };
-    setInterval(checkWindowsize, 200);
-
-    //render the toolbar
-    this.renderToolbar(rootElement);
-
-    //keyboard events
-    this.handleKeyEvent = (e) => {
-      switch (e.type) {
-        case "keydown":
-          that.keyDown(e);
-          break;
-        case "keyup":
-          that.keyUp(e);
-          break;
-      }
-    };
-    document.addEventListener("keydown", this.handleKeyEvent, false);
-    document.addEventListener("keyup", this.handleKeyEvent, false);
+  handleInput(e) {
+    if (e.type == "keydown") {
+      this.keyDown(e);
+    } else if (e.type == "keyup") {
+      this.keyUp(e);
+    } else {
+      this.handlePointerEvent(e);
+    }
   }
 
   renderToolbar(parent) {
@@ -412,7 +366,9 @@ class Game {
     const close = () => {
       document.removeEventListener("keydown", onKey, false);
       document.body.removeChild(overlay);
+      this.closeAbout = null;
     };
+    this.closeAbout = close;
     const onKey = (e) => {
       if (e.keyCode == 27) {
         close();
@@ -516,7 +472,7 @@ class Game {
     const n = Config.MazeSize[size];
     this.maze.resize(n, n);
     this.markSelected(this.sizeButtons, size);
-    this.resizeCanvas();
+    this.host.resizeCanvas();
     this.prepareMaze();
   }
 
@@ -585,11 +541,14 @@ class Game {
       if (that.arrowKeyStatus > 0) {
         that.moveStep(dRow, dCol);
 
-        //set-up the timer for next round
-        that.keyboardTimer = setTimeout(
-          keyboardTimerHandler,
-          Config.Game.keyboardTimerDelay,
-        );
+        if (that.arrowKeyStatus > 0) {
+          that.keyboardTimer = setTimeout(
+            keyboardTimerHandler,
+            Config.Game.keyboardTimerDelay,
+          );
+        } else {
+          that.keyboardTimer = null;
+        }
       } else {
         that.keyboardTimer = null;
       }
@@ -600,7 +559,7 @@ class Game {
   /* touch and mouse: press anywhere on the maze and drag; the player moves in the drag direction while held */
   bindPointer() {
     const that = this;
-    const canvas = this.canvas;
+    const canvas = this.host.canvas;
     let activePointer = null;
     let startX = 0;
     let startY = 0;
@@ -647,22 +606,23 @@ class Game {
       }
     };
 
-    canvas.addEventListener("pointerdown", (e) => {
-      if (that.state != GameState.Playing || activePointer != null) {
-        return;
+    this.handlePointerEvent = (e) => {
+      if (e.type == "pointerdown") {
+        if (that.state != GameState.Playing || activePointer != null) {
+          return;
+        }
+        activePointer = e.pointerId;
+        startX = e.clientX;
+        startY = e.clientY;
+        canvas.setPointerCapture(e.pointerId);
+      } else if (e.type == "pointermove") {
+        if (activePointer == e.pointerId) {
+          update(e);
+        }
+      } else {
+        release(e);
       }
-      activePointer = e.pointerId;
-      startX = e.clientX;
-      startY = e.clientY;
-      canvas.setPointerCapture(e.pointerId);
-    });
-    canvas.addEventListener("pointermove", (e) => {
-      if (activePointer == e.pointerId) {
-        update(e);
-      }
-    });
-    canvas.addEventListener("pointerup", release);
-    canvas.addEventListener("pointercancel", release);
+    };
   }
 
   stopMoving() {
@@ -698,40 +658,26 @@ class Game {
     }
   }
 
-  resizeCanvas() {
-    const wrapperWidth = this.width - Config.Game.padding * 2;
-    const wrapperHeight = this.height - Config.Game.padding * 2;
-    //fractional cell size so the board always fills the available space
-    const boardWidth = Math.floor(wrapperWidth);
-    const boardHeight = Math.floor(wrapperHeight);
-    this.cellSize = Math.min(
-      boardWidth / this.maze.cols,
-      boardHeight / this.maze.rows,
-    );
-
-    //back the canvas with device pixels so lines stay sharp on high-DPI screens
-    const ratio = window.devicePixelRatio || 1;
-    this.canvasWidth = Math.round(this.maze.cols * this.cellSize);
-    this.canvasHeight = Math.round(this.maze.rows * this.cellSize);
-    this.canvas.width = Math.round(this.canvasWidth * ratio);
-    this.canvas.height = Math.round(this.canvasHeight * ratio);
-    this.canvas.style.width = this.canvasWidth + "px";
-    this.canvas.style.height = this.canvasHeight + "px";
-    this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
-
-    this.redraw();
+  getGridSize() {
+    return { rows: this.maze.rows, cols: this.maze.cols };
   }
 
   redraw() {
-    //draw the background
-    this.context.save();
-    this.context.fillStyle = Config.Game.backgroundColor;
-    this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
-    this.context.restore();
+    this.host.redraw();
+  }
 
-    //draw the maze and path
-    this.maze.redraw(this.context, this.cellSize);
-    this.path.redraw(this.context, this.cellSize);
+  draw(context, cellSize) {
+    this.maze.redraw(context, cellSize);
+    this.path.redraw(context, cellSize);
+  }
+
+  destroy() {
+    this.stopMoving();
+    this.maze.cancel();
+    this.path.cancel();
+    if (this.closeAbout) {
+      this.closeAbout();
+    }
   }
 
   resetMaze() {
@@ -764,5 +710,6 @@ class Game {
 
 let game = null;
 addEventListener("load", () => {
-  game = new Game();
+  const host = new GameHost(document.body);
+  game = host.start(MazeGame);
 });

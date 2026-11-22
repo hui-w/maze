@@ -13,6 +13,8 @@ class Maze {
 
     this.onUpdateUI = null;
     this.onInitComplete = null;
+    this.generationTimer = null;
+    this.runId = 0;
   }
 
   updateUI() {
@@ -40,8 +42,7 @@ class Maze {
 
   /* build the cells and closed walls without generating the maze */
   prepare() {
-    //a new run invalidates any step-by-step generation still in progress
-    this.runId = (this.runId || 0) + 1;
+    this.cancel();
     this.tempWalls = [];
     this.connectedCount = 0;
 
@@ -59,6 +60,14 @@ class Maze {
 
     //prepare all the walls
     this.generateWalls();
+  }
+
+  cancel() {
+    this.runId++;
+    if (this.generationTimer != null) {
+      clearTimeout(this.generationTimer);
+      this.generationTimer = null;
+    }
   }
 
   init() {
@@ -118,7 +127,12 @@ class Maze {
         }
         if (that.tempWalls.length > 0) {
           that.processRandomWall(true);
-          setTimeout(runStep, Config.Maze.stepDelay);
+          if (runId == that.runId) {
+            that.generationTimer = setTimeout(() => {
+              that.generationTimer = null;
+              runStep();
+            }, Config.Maze.stepDelay);
+          }
         } else {
           //end
           that.initComplete();

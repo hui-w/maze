@@ -3,7 +3,7 @@
  * @repo https://github.com/hui-w/maze
  * @licence MIT
  */
-class Path {
+class MazePath {
   constructor() {
     this.maze = null;
 
@@ -17,6 +17,8 @@ class Path {
 
     this.onUpdateUI = null;
     this.onPathComplete = null;
+    this.searchTimer = null;
+    this.runId = 0;
   }
 
   updateUI() {
@@ -43,6 +45,7 @@ class Path {
 
   /* initialize without maze object  will only cleat the contents and refresh the UI*/
   init(maze) {
+    this.cancel();
     this.maze = maze;
     this.entranceNode = null;
     this.exitNode = null;
@@ -61,9 +64,19 @@ class Path {
     }
   }
 
+  cancel() {
+    this.runId++;
+    if (this.searchTimer != null) {
+      clearTimeout(this.searchTimer);
+      this.searchTimer = null;
+    }
+  }
+
   getPath() {
+    this.cancel();
     this.manuallySolved = false;
     const that = this;
+    const runId = this.runId;
     if (this.entranceNode == null || this.exitNode == null) {
       return;
     }
@@ -120,13 +133,21 @@ class Path {
     } else {
       //run step by step
       const runStep = () => {
+        if (runId != that.runId) {
+          return;
+        }
         if (Config.Path.stepDelay > 0) {
           //path step may be turned off any time during the timer
           if (!that.astar.isFound()) {
             that.stepNode = that.astar.step();
             if (that.stepNode) {
               that.updateUI();
-              setTimeout(runStep, Config.Path.stepDelay);
+              if (runId == that.runId) {
+                that.searchTimer = setTimeout(() => {
+                  that.searchTimer = null;
+                  runStep();
+                }, Config.Path.stepDelay);
+              }
             }
           } else {
             //already reach the exit

@@ -12,7 +12,7 @@ function load() {
     document: {},
   });
   context.window = context;
-  ["common.js", "config.js", "maze.js", "astar.js", "path.js"].forEach(function (file) {
+  ["common.js", "config.js", "maze.js", "astar.js", "maze-path.js"].forEach(function (file) {
     const code = fs.readFileSync(path.join(__dirname, "..", "src", file), "utf8");
     vm.runInContext(code, context, { filename: file });
   });
@@ -21,7 +21,7 @@ function load() {
   //unlike function declarations, so pull them out by name for the tests
   Object.assign(
     context,
-    vm.runInContext("({ Maze, Wall, Cell, AStar, Path })", context),
+    vm.runInContext("({ Maze, Wall, Cell, AStar, MazePath })", context),
   );
   return context;
 }
@@ -85,7 +85,7 @@ sizes.forEach(function (size) {
 
   test("A* solves " + rows + "x" + cols + " from entrance to exit", function () {
     const maze = generate(rows, cols);
-    const p = new ctx.Path();
+    const p = new ctx.MazePath();
     p.init(maze);
     p.getPath();
 
@@ -157,7 +157,7 @@ sizes.forEach(function (size) {
 
 test("manual path includes every visited cell, including backtracks", function () {
   const maze = generate(8, 8);
-  const p = new ctx.Path();
+  const p = new ctx.MazePath();
   p.init(maze);
   p.getPath();
   const route = p.aStarPath;
@@ -190,7 +190,7 @@ test("manual path includes every visited cell, including backtracks", function (
 });
 
 test("step count is derived from the manual path", function () {
-  const p = new ctx.Path();
+  const p = new ctx.MazePath();
   p.init();
   //no entrance yet: step count is null, not 0; Game.updateCounters
   //shows N/A for null, like Path Length before an auto solve
@@ -294,7 +294,7 @@ test("AStar works on a plain graph, without a maze", function () {
 
 test("entrance is on the left edge and exit on the right edge", function () {
   const maze = generate(4, 8);
-  const p = new ctx.Path();
+  const p = new ctx.MazePath();
   for (let i = 0; i < 20; i++) {
     p.init(maze);
     assert.strictEqual(p.entranceNode.col, 0);
@@ -325,7 +325,7 @@ test("generation progress reaches 100%", function () {
 
 test("moveStep only passes through open walls", function () {
   const maze = generate(8, 8);
-  const p = new ctx.Path();
+  const p = new ctx.MazePath();
   p.init(maze);
   const start = p.stepNode;
   let moved = 0;

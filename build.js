@@ -9,10 +9,11 @@ const out = path.join(__dirname, "release");
 const scripts = [
   "common.js",
   "config.js",
-  "game.js",
   "maze.js",
   "astar.js",
-  "path.js",
+  "maze-path.js",
+  "game-host.js",
+  "maze-game.js",
 ];
 
 async function build() {
