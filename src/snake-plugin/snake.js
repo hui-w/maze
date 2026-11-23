@@ -1,5 +1,5 @@
 class Snake {
-  constructor(rows, cols, wrap, random = Math.random) {
+  constructor(rows, cols, wrap, random = Math.random, selfCollision = true) {
     if (!Number.isInteger(rows) || rows < 1 || !Number.isInteger(cols) || cols < 3) {
       throw new Error("Snake requires at least one row and three columns");
     }
@@ -7,6 +7,7 @@ class Snake {
     this.cols = cols;
     this.wrap = wrap;
     this.random = random;
+    this.selfCollision = selfCollision;
     const row = Math.floor(rows / 2);
     const col = 2;
     this.body = [
@@ -69,7 +70,8 @@ class Snake {
 
     const growing = this.food && row == this.food.row && col == this.food.col;
     const occupiedLength = this.body.length - (growing ? 0 : 1);
-    if (this.body.slice(0, occupiedLength).some((cell) => cell.row == row && cell.col == col)) {
+    if (this.selfCollision &&
+        this.body.slice(0, occupiedLength).some((cell) => cell.row == row && cell.col == col)) {
       this.outcome = "lost";
       return this.outcome;
     }

@@ -13,6 +13,7 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   let captured = false;
   let redraws = 0;
   let paletteOpens = 0;
+  let now = 0;
   class Element {
     constructor() {
       this.children = [];
@@ -47,6 +48,7 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
     }
   }
   const context = vm.createContext({
+    performance: { now: () => now },
     createChild(parent, tag, attributes, text) {
       return parent.createChild(tag, attributes, text);
     },
@@ -100,6 +102,8 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   assert.equal(game.sizeButtons.S["aria-pressed"], "false");
   assert.ok(game.sizeButtons.M.hasClassName("selected"));
   assert.equal(game.sizeButtons.XXS, undefined);
+  assert.equal(game.snake.selfCollision, true);
+  assert.ok(game.selfCollisionButtons.ON.hasClassName("selected"));
   assert.equal(game.resetButton.disabled, true);
   let foodDraws = 0;
   const borders = [];
@@ -180,18 +184,25 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   assert.equal(game.snake.rows, 24);
   assert.equal(settings.get("snake.size"), "S");
   assert.ok(game.sizeButtons.S.hasClassName("selected"));
-  game.edgeButtons["Wrap around"].onclick();
+  game.edgeButtons.ON.onclick();
   assert.equal(game.snake.wrap, true);
   assert.equal(settings.get("snake.edges"), "Wrap around");
+  game.selfCollisionButtons.OFF.onclick();
+  assert.equal(game.snake.selfCollision, false);
+  assert.equal(settings.get("snake.selfCollision"), "OFF");
+  assert.ok(game.selfCollisionButtons.OFF.hasClassName("selected"));
   const borderCount = borders.length;
   game.draw(canvas, 10);
   assert.equal(borders.length, borderCount);
   game.start();
   assert.equal(game.state, "playing");
-  assert.ok(game.edgeButtons.Walls.hasClassName("disabled"));
+  assert.ok(game.edgeButtons.OFF.hasClassName("disabled"));
   assert.ok(game.sizeButtons.XS.hasClassName("disabled"));
   assert.equal(game.sizeButtons.XS.disabled, true);
-  game.edgeButtons.Walls.onclick();
+  assert.equal(game.selfCollisionButtons.ON.disabled, true);
+  game.selfCollisionButtons.ON.onclick();
+  assert.equal(game.snake.selfCollision, false);
+  game.edgeButtons.OFF.onclick();
   game.sizeButtons.XS.onclick();
   assert.equal(game.snake.wrap, true);
   assert.equal(game.size, 24);
@@ -225,6 +236,7 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   assert.equal(game.state, "paused");
   game.sizeButtons.XS.onclick();
   assert.equal(game.size, 24);
+  assert.equal(game.selfCollisionButtons.ON.disabled, true);
   assert.equal(captured, false);
   assert.equal(timers.size, 0);
   game.speedButtons.SLOW.onclick();
@@ -240,6 +252,7 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   assert.equal(game.state, "ready");
   assert.equal(game.snake.score, 0);
   assert.equal(game.snake.wrap, true);
+  assert.equal(game.snake.selfCollision, false);
   assert.equal(game.size, 24);
   assert.equal(game.delay, 250);
   assert.equal(timers.size, 0);
@@ -250,14 +263,75 @@ test("game pauses, resumes, resets edge mode, and cleans up its timer", () => {
   assert.equal(next.size, 24);
   assert.equal(next.delay, 250);
   assert.equal(next.snake.wrap, true);
+  assert.equal(next.snake.selfCollision, false);
   next.init();
-  assert.ok(next.edgeButtons["Wrap around"].hasClassName("selected"));
-  next.edgeButtons.Walls.onclick();
+  assert.ok(next.edgeButtons.ON.hasClassName("selected"));
+  next.edgeButtons.OFF.onclick();
   assert.equal(settings.get("snake.edges"), "Walls");
   assert.equal(new registered(host).snake.wrap, false);
   assert.equal(settings.has("maze.size"), false);
   settings.set("snake.size", "XXS");
   settings.set("snake.edges", "invalid");
+  settings.set("snake.selfCollision", "invalid");
   assert.equal(new registered(host).size, 32);
   assert.equal(new registered(host).snake.wrap, false);
+  assert.equal(new registered(host).snake.selfCollision, true);
+
+  const rateGame = new registered(host);
+  rateGame.init();
+  const bottom = host.toolbar.children.slice(-6);
+  assert.equal(bottom[0].children.includes(rateGame.resetButton), true);
+  assert.equal(bottom[1].className, "toolbar-separator");
+  assert.equal(bottom[2].children[1], rateGame.score);
+  assert.equal(bottom[3].children[1], rateGame.time);
+  assert.equal(bottom[4].children[1], rateGame.rate);
+  assert.equal(bottom[5].className, "toolbar-footer");
+  for (const line of bottom.slice(2, 5)) {
+    assert.ok(line.children[0].hasClassName("snake-stat-label"));
+  }
+  assert.equal(rateGame.score.textContent, 0);
+  assert.equal(rateGame.rate.textContent, "0.0/min");
+  assert.equal(rateGame.time.textContent, "0:00");
+  rateGame.start();
+  assert.equal(rateGame.rate.textContent, "0.0/min");
+  rateGame.snake.food = {
+    row: rateGame.snake.body[0].row,
+    col: rateGame.snake.body[0].col + 1,
+  };
+  const tick = () => {
+    const timer = timers.get(rateGame.timer);
+    timers.delete(rateGame.timer);
+    timer.callback();
+  };
+  now = 30000;
+  tick();
+  assert.equal(rateGame.score.textContent, 1);
+  assert.equal(rateGame.rate.textContent, "2.0/min");
+  assert.equal(rateGame.time.textContent, "0:30");
+  now = 45000;
+  rateGame.pause();
+  assert.equal(rateGame.rate.textContent, "1.3/min");
+  assert.equal(rateGame.time.textContent, "0:45");
+  now = 165000;
+  rateGame.start();
+  assert.equal(rateGame.rate.textContent, "1.3/min");
+  assert.equal(rateGame.time.textContent, "0:45");
+  now = 180000;
+  tick();
+  assert.equal(rateGame.rate.textContent, "1.0/min");
+  assert.equal(rateGame.time.textContent, "1:00");
+  now = 240000;
+  rateGame.snake.step = () => "lost";
+  tick();
+  assert.equal(rateGame.rate.textContent, "0.5/min");
+  assert.equal(rateGame.time.textContent, "2:00");
+  now = 300000;
+  rateGame.updateToolbar();
+  assert.equal(rateGame.rate.textContent, "0.5/min");
+  assert.equal(rateGame.time.textContent, "2:00");
+  rateGame.resetButton.onclick();
+  assert.equal(rateGame.score.textContent, 0);
+  assert.equal(rateGame.rate.textContent, "0.0/min");
+  assert.equal(rateGame.time.textContent, "0:00");
+  rateGame.destroy();
 });

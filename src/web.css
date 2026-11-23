@@ -52,6 +52,10 @@ a {
 .toolbar .toolbar-line .toolbar-text {
   color: #3b3226;
 }
+.toolbar .toolbar-line .snake-stat-label {
+  display: inline-block;
+  width: 120px;
+}
 .toolbar .toolbar-line .toolbar-linkbutton,
 .toolbar .toolbar-footer .toolbar-linkbutton {
   border: 0;

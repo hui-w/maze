@@ -1,6 +1,6 @@
 {
   "name": "maze",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Maze generation and A* path finding in JavaScript",
   "private": true,
   "license": "MIT",

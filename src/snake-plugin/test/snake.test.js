@@ -73,6 +73,21 @@ test("moving into the departing tail is allowed, but hitting the body loses", ()
   assert.equal(snake.step(), "lost");
 });
 
+test("disabling self-collision allows crossing the body but not walls", () => {
+  const snake = new Snake(4, 4, false, () => 0, false);
+  snake.body = [
+    { row: 1, col: 1 }, { row: 1, col: 0 }, { row: 2, col: 0 },
+    { row: 2, col: 1 }, { row: 2, col: 2 }, { row: 1, col: 2 },
+  ];
+  snake.direction = { row: 1, col: 0 };
+  snake.food = { row: 3, col: 3 };
+  assert.equal(snake.step(), null);
+  assert.equal(snake.body[0].row, 2);
+  assert.equal(snake.body[0].col, 1);
+  assert.equal(snake.step(), null);
+  assert.equal(snake.step(), "lost");
+});
+
 test("filling the board wins instead of attempting to place food", () => {
   const snake = new Snake(3, 3, false, () => 0);
   snake.body = [
